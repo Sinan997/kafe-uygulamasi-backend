@@ -1,5 +1,4 @@
 const User = require('../models/user')
-const RefreshToken = require('../models/refreshToken')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
@@ -41,7 +40,7 @@ const postLogin = async (req, res) => {
 	const isPasswordCorrect = await bcrypt.compare(password, user.password)
 	if (isPasswordCorrect) {
 		const accessToken = generateAccesToken(user)
-		return res.status(200).json({ accessToken, success: true })
+		return res.status(200).json({ accessToken, user: { username: user.username, id: user._id, role: user.role }, success: true })
 	} else {
 		return res.status(401).json({ message: 'Şifre yanlış', success: false })
 	}
