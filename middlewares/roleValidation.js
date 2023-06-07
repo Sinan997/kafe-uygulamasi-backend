@@ -8,11 +8,8 @@ const isAdmin = (req, res, next) => {
 	}
 	const token = authHeader.split(' ')[1]
 	try {
-		console.log({token});
 		const user = jwt.verify(token, process.env.JWT_SECRET_KEY)._doc
-		console.log(user);
 		if (user.role === 'admin') {
-			req.user = user
 			next()
 		} else{
 			return res.status(403).json({ message: 'Yetkili değil', success: false })
