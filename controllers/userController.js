@@ -10,6 +10,7 @@ const getAllUsers = async (req, res) => {
 }
 
 const addUser = async (req, res) => {
+	console.log('add user çalıştı');
 	const { name, surname, username, password, role } = req.body
 	const isUsernameExist = await User.findOne({ username })
 	if (isUsernameExist) {
