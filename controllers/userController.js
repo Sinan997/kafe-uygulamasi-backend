@@ -2,7 +2,7 @@ const User = require('../models/user')
 const bcrypt = require('bcryptjs')
 
 const getAllUsers = async (req, res) => {
-	const users = await User.find()
+	const users = await User.find().select('-password -__v')
 	if (!users) {
 		return res.status(404).json({ message: 'Userları getirme işlemi başarısız oldu', success: false })
 	}
@@ -10,11 +10,10 @@ const getAllUsers = async (req, res) => {
 }
 
 const addUser = async (req, res) => {
-	console.log('add user çalıştı');
 	const { name, surname, username, password, role } = req.body
 	const isUsernameExist = await User.findOne({ username })
 	if (isUsernameExist) {
-		return res.status(406).json({ message: 'Username kullanılmaktadır', succes: false })
+		return res.status(406).json({ message: 'Username kullanılmaktadır', success: false })
 	}
 
 	try {
@@ -29,16 +28,71 @@ const addUser = async (req, res) => {
 		})
 
 		await user.save()
+		user.password = undefined
+		user.__v = undefined
 		if (user) {
-			return res.status(201).json({ message: 'Kullanıcı Oluşturuldu', succes: true })
+			return res.status(201).json({ user:user, message: 'Kullanıcı Oluşturuldu', success: true })
 		}
 	} catch (error) {
 		console.log(error);
-		return res.status(404).json({ message: 'Kullanıcı Oluşturulamadı', succes: false })
+		return res.status(404).json({ message: 'Kullanıcı Oluşturulamadı', success: false })
 	}
+}
+
+const deleteUser = async (req, res) => {
+	const { id } = req.body
+	try {
+		const user = await User.findByIdAndDelete(id)
+		if (!user) {
+			return res.status(404).json({ message: 'Kullanıcı Bulunamadı', success: false })
+		}
+		return res.status(201).json({ message: 'Kullanıcı Silindi', success: true })
+	} catch (error) {
+		console.log(error);
+		return res.status(404).json({ message: 'Kullanıcı Silinemedi', success: false })
+	}
+}
+
+const deleteUsers = async (req, res) => {
+	const { ids } = req.body
+	try {
+		const result = await User.deleteMany({ _id: { $in: ids }})
+		if (result.deletedCount !== ids.length) {
+			return res.status(404).json({ message: 'Seçili tüm kullanıcılar silinemedi', success: false })
+		}
+		return res.status(201).json({ message: `${result.deletedCount} Kullanıcı Silindi`, success: true })
+	} catch (error) {
+		console.log(error);
+		return res.status(404).json({ message: 'Kullanıcılar Silinemedi', success: false })
+	}
+}
+
+const updateUser = async (req, res) => {
+	const { id,password } = req.body
+	let user
+	try {
+		if(password){
+			const hashedPassword = await bcrypt.hash(password,10)
+			user = await User.findByIdAndUpdate(id, { ...req.body, password:hashedPassword }, { new:true })
+			return res.status(200).json({ user, message: 'Kullanıcı Güncellendi', success: true })
+		}else{
+			req.body.password = undefined
+			user = await User.findByIdAndUpdate(id, { ...req.body }, { new:true })
+		}
+		user.password = undefined
+		user.__v = undefined
+		return res.status(200).json({ user, message: 'Kullanıcı Güncellendi', success: true })
+	} catch (error) {
+		console.log(error);
+		return res.status(404).json({ message: 'Kullanıcı Güncellenemedi', success: false })
+	}
+
 }
 
 module.exports = {
 	getAllUsers,
 	addUser,
+	deleteUser,
+	deleteUsers,
+	updateUser
 }
