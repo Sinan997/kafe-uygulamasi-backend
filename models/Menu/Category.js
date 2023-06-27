@@ -10,12 +10,7 @@ const categorySchema = new Schema({
 	index: {
 		type: Number,
 		required: true,
-	},
-	products: {
-		type: [
-      { type: mongoose.Schema.Types.ObjectId, ref: 'Product' }
-    ],
-	},
+	}
 })
 
 module.exports = mongoose.model('Category', categorySchema)

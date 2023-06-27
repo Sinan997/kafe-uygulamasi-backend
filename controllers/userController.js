@@ -73,11 +73,11 @@ const updateUser = async (req, res) => {
 	try {
 		if(password){
 			const hashedPassword = await bcrypt.hash(password,10)
-			user = await User.findByIdAndUpdate(id, { ...req.body, password:hashedPassword }, { new:true })
+			user = await User.findByIdAndUpdate(id, { ...req.body, password:hashedPassword }, { new: true })
 			return res.status(200).json({ user, message: 'Kullanıcı Güncellendi', success: true })
 		}else{
 			req.body.password = undefined
-			user = await User.findByIdAndUpdate(id, { ...req.body }, { new:true })
+			user = await User.findByIdAndUpdate(id, { ...req.body }, { new: true })
 		}
 		user.password = undefined
 		user.__v = undefined
