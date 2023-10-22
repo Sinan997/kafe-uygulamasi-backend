@@ -13,7 +13,7 @@ const postLogin = async (req, res) => {
 
 	const isPasswordCorrect = await bcrypt.compare(password, user.password);
 	if (isPasswordCorrect) {
-		const accessToken = generateToken(user, process.env.JWT_SECRET_KEY, '1m');
+		const accessToken = generateToken(user, process.env.JWT_SECRET_KEY, '14m');
 		const refreshToken = generateToken(user, process.env.JWT_REFRESH_KEY, '7d');
 		new RefreshToken({ token: refreshToken }).save();
 		return res.status(200).json({ accessToken, refreshToken, success: true });
@@ -22,20 +22,35 @@ const postLogin = async (req, res) => {
 	}
 };
 
-const logout = async (req, res) => {
+const logoutController = async (req, res) => {
 	const { refreshToken } = req.body;
 
 	if (!refreshToken) {
 		return res.status(404).json({ message: 'Token bulunamadı', success: false });
 	}
 
-	const response = jwt.decode(refreshToken);
-	console.log('response',response);
+	RefreshToken.findOneAndDelete({ token: refreshToken });
+	return res.status(200).json({ message: 'Token deleted', success: true });
+};
+
+const refreshTokenController = (req, res) => {
+	const { refreshToken } = req.body;
+
+	if (!refreshToken) {
+		return res.status(404).json({ message: 'Token bulunamadı', success: false });
+	}
+	RefreshToken.findOneAndDelete({ token: refreshToken });
+
+	const newAccessToken = generateToken(user, process.env.JWT_SECRET_KEY, '2m');
+	const newRefreshToken = generateToken(user, process.env.JWT_REFRESH_KEY, '7d');
+
+	return res.status(200).json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
 };
 
 module.exports = {
 	postLogin,
-	logout,
+	logoutController,
+	refreshTokenController,
 };
 
 const generateToken = (user, secretKey, expiresIn) => {

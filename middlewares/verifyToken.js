@@ -10,7 +10,6 @@ const verifyToken = (req, res, next) => {
       jwt.verify(token, process.env.JWT_SECRET_KEY)
       next()
     } catch (error) {
-      console.log('verifyToken', error)
       return res.status(403).json(error)
     }
   }
