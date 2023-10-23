@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { postLogin, logoutController, refreshTokenController } = require('../controllers/authControllers');
-const { validateLogin } = require('../middlewares/loginValidation');
+const { login, logoutController, refreshTokenController } = require('../controllers/authControllers');
+const { validateLoginFields } = require('../middlewares/loginValidation');
 
-router.post('/login', validateLogin, postLogin);
+router.post('/login', validateLoginFields, login);
 
 router.post('/logout', logoutController);
 
