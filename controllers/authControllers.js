@@ -14,8 +14,8 @@ const login = async (req, res) => {
 	const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
 	if (isPasswordCorrect) {
-		const accessToken = generateToken(user, process.env.JWT_SECRET_KEY, '1m');
-		const refreshToken = generateToken(user, process.env.JWT_REFRESH_KEY, '2m');
+		const accessToken = generateToken(user, process.env.JWT_SECRET_KEY, '20m');
+		const refreshToken = generateToken(user, process.env.JWT_REFRESH_KEY, '7d');
 		RefreshToken.deleteOne({ userId: user._id }).then(() => {
 			new RefreshToken({ token: refreshToken, userId: user._id }).save();
 		});
@@ -54,8 +54,8 @@ const refreshTokenController = (req, res) => {
 		username: decodedToken.decodedTokenname,
 	};
 
-	const newAccessToken = generateToken(user, process.env.JWT_SECRET_KEY, '1m');
-	const newRefreshToken = generateToken(user, process.env.JWT_REFRESH_KEY, '2m');
+	const newAccessToken = generateToken(user, process.env.JWT_SECRET_KEY, '20m');
+	const newRefreshToken = generateToken(user, process.env.JWT_REFRESH_KEY, '7d');
 
 	return res.status(200).json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
 };
