@@ -1,9 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { login, logoutController, refreshTokenController } = require('../controllers/authControllers');
+const {
+  loginController,
+  logoutController,
+  refreshTokenController,
+} = require('../controllers/authControllers');
 const { validateLoginFields } = require('../middlewares/loginValidation');
 
-router.post('/login', validateLoginFields, login);
+router.post('/login', validateLoginFields, loginController);
 
 router.post('/logout', logoutController);
 

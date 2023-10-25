@@ -3,7 +3,7 @@ const RefreshToken = require('../models/RefreshToken');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const login = async (req, res) => {
+const loginController = async (req, res) => {
 	const { username, password } = req.body;
 	const user = await User.findOne({ username });
 
@@ -61,14 +61,14 @@ const refreshTokenController = (req, res) => {
 };
 
 module.exports = {
-	login,
+	loginController,
 	logoutController,
 	refreshTokenController,
 };
 
 const generateToken = (user, secretKey, expiresIn) => {
 	options = {
-		id: user._id,
+		_id: user._id,
 		role: user.role,
 		name: user.name,
 		surname: user.surname,
