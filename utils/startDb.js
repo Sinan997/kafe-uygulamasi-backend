@@ -18,7 +18,7 @@ const startDB = async () => {
             name: 'Sinan',
             surname: 'Öztürk',
             username: 'sinan.ozturk',
-            role: 'user',
+            role: 'waiter',
             password: hashedPw,
           });
           user.save();

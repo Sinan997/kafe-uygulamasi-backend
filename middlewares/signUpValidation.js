@@ -1,9 +1,9 @@
 const validateSignUp = (req, res, next) => {
-  const { name, surname, username, password, role } = req.body
+  const { name, surname, username, password, role } = req.body;
   if (!name || !surname || !username || !password || !role) {
-    return res.status(406).json({ message: 'Lütfen Tüm Alanları Doldurun.', success: false })
+    return res.status(406).json({ message: 'Lütfen Tüm Alanları Doldurun.', success: false });
   }
-  next() 
-}
+  next();
+};
 
-module.exports = { validateSignUp }
+module.exports = { validateSignUp };

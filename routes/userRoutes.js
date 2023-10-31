@@ -1,24 +1,16 @@
 const express = require('express');
-const {
-  getAllUsers,
-  addUser,
-  deleteUser,
-  deleteUsers,
-  updateUser,
-} = require('../controllers/userController');
-const { isAdmin } = require('../middlewares/roleValidation');
+const { getAllUsers, addUser, deleteUser, updateUser } = require('../controllers/userController');
+const { isAdmin } = require('../middlewares/isAdminValidator');
 const { validateSignUp } = require('../middlewares/signUpValidation');
 const verifyToken = require('../middlewares/verifyToken');
 const router = express.Router();
 
 router.get('/all-users', verifyToken, isAdmin, getAllUsers);
 
-router.post('/add-user', isAdmin, validateSignUp, addUser);
+router.post('/add-user', verifyToken, isAdmin, validateSignUp, addUser);
 
-router.delete('/delete-user', isAdmin, deleteUser);
+router.delete('/delete-user', verifyToken, isAdmin, deleteUser);
 
-router.delete('/delete-users', isAdmin, deleteUsers);
-
-router.put('/update-user', isAdmin, updateUser);
+router.put('/update-user', verifyToken, isAdmin, updateUser);
 
 module.exports = router;

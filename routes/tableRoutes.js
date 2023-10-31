@@ -1,8 +1,8 @@
-const express = require('express')
-const router = express.Router()
-const { isAdmin } = require('../middlewares/roleValidation')
-const { createTables } = require('../controllers/tableController')
+const express = require('express');
+const router = express.Router();
+const { isAdmin } = require('../middlewares/isAdminValidator');
+const { createTables } = require('../controllers/tableController');
 
-router.post('/create-tables', isAdmin, createTables)
+router.post('/create-tables', isAdmin, createTables);
 
-module.exports = router
+module.exports = router;
