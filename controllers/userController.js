@@ -2,7 +2,7 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 
 const getAllUsers = async (req, res) => {
-  const users = await User.find().select('-password -__v');
+  const users = await User.find({ businessId: req.user.businessId }).select('-password -__v');
   if (!users) {
     return res
       .status(404)
@@ -27,6 +27,7 @@ const addUser = async (req, res) => {
       username,
       password: hashedPw,
       role,
+      businessId: req.user.businessId,
     });
 
     await user.save();
