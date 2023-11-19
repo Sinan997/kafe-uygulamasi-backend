@@ -13,25 +13,26 @@ const {
   updateProductAsync,
 } = require('../controllers/menuController');
 const { isAdmin } = require('../middlewares/isAdminValidator');
+const { verifyToken } = require('../middlewares/verifyToken');
 
-router.get('/all-categories', isAdmin, allCategories);
+router.get('/all-categories', verifyToken, isAdmin, allCategories);
 
-router.post('/add-category', isAdmin, addCategory);
+router.post('/add-category', verifyToken, isAdmin, addCategory);
 
-router.delete('/delete-category', isAdmin, deleteCategory);
+router.delete('/delete-category', verifyToken, isAdmin, deleteCategory);
 
-router.post('/set-categories-index', isAdmin, setCategoriesIndex);
+router.post('/set-categories-index', verifyToken, isAdmin, setCategoriesIndex);
 
-router.post('/change-categoryName', isAdmin, changeCategoryName);
+router.post('/change-categoryName', verifyToken, isAdmin, changeCategoryName);
 
-router.post('/add-product', isAdmin, addProduct);
+router.post('/add-product', verifyToken, isAdmin, addProduct);
 
-router.get('/all-products/:categoryId', isAdmin, getAllProducts);
+router.get('/all-products/:categoryId', verifyToken, isAdmin, getAllProducts);
 
-router.delete('/delete-product', isAdmin, deleteProduct);
+router.delete('/delete-product', verifyToken, isAdmin, deleteProduct);
 
-router.post('/set-products-index', isAdmin, setProductsIndex);
+router.post('/set-products-index', verifyToken, isAdmin, setProductsIndex);
 
-router.post('/update-product', isAdmin, updateProductAsync);
+router.post('/update-product', verifyToken, isAdmin, updateProductAsync);
 
 module.exports = router;
