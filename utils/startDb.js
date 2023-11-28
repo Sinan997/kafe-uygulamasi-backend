@@ -26,9 +26,9 @@ const startDB = async () => {
                   businessId: createdBusiness._id,
                 });
 
-                const adminuser = await user.save()
+                const adminuser = await user.save();
                 await createdBusiness.addToUsers(adminuser._id);
-                const garsonuser = await user2.save()
+                const garsonuser = await user2.save();
                 await createdBusiness.addToUsers(garsonuser._id);
 
                 console.log('development için atkafasi.admin ve user oluşturuldu');
