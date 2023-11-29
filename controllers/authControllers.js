@@ -16,7 +16,7 @@ const loginController = async (req, res) => {
   if (isPasswordCorrect) {
     const accessToken = generateToken(user, process.env.JWT_SECRET_KEY, '20m');
     const refreshToken = generateToken(user, process.env.JWT_REFRESH_KEY, '7d');
-    RefreshToken.deleteOne({ userId: user._id }).then(() => {
+    RefreshToken.deleteOne({ userId: user._id }).then((res) => {
       new RefreshToken({ token: refreshToken, userId: user._id }).save();
     });
     return res.status(200).json({ accessToken, refreshToken, success: true });
@@ -47,11 +47,11 @@ const refreshTokenController = (req, res) => {
   }
 
   const user = {
-    id: decodedToken.id,
+    _id: decodedToken._id,
+    email: decodedToken.email,
+    username: decodedToken.username,
     role: decodedToken.role,
-    name: decodedToken.name,
-    surname: decodedToken.surname,
-    username: decodedToken.decodedTokenname,
+    businessId: decodedToken.businessId,
   };
 
   const newAccessToken = generateToken(user, process.env.JWT_SECRET_KEY, '20m');
@@ -60,20 +60,19 @@ const refreshTokenController = (req, res) => {
   return res.status(200).json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
 };
 
+const generateToken = (user, secretKey, expiresIn) => {
+  options = {
+    _id: user.id,
+    email: user.email,
+    username: user.username,
+    role: user.role,
+    businessId: user.businessId,
+  };
+  return jwt.sign(options, secretKey, { expiresIn });
+};
+
 module.exports = {
   loginController,
   logoutController,
   refreshTokenController,
-};
-
-const generateToken = (user, secretKey, expiresIn) => {
-  options = {
-    _id: user._id,
-    role: user.role,
-    name: user.name,
-    surname: user.surname,
-    username: user.username,
-    businessId: user.businessId,
-  };
-  return jwt.sign(options, secretKey, { expiresIn });
 };
