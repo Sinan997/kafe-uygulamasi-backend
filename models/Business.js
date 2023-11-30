@@ -16,4 +16,18 @@ businessSchema.methods.addToUsers = async function (userId) {
   await this.save();
 };
 
+businessSchema.methods.addToCategories = async function (categoryId) {
+  const currentCategories = this.categories;
+  currentCategories.push(categoryId);
+  this.categories = currentCategories;
+  await this.save();
+};
+
+businessSchema.methods.removeFromCategories = async function (categoryId) {
+  let currentCategories = [...this.categories];
+  currentCategories = currentCategories.filter((category) => category._id.toString() !== categoryId);
+  this.categories = currentCategories;
+  await this.save();
+};
+
 module.exports = mongoose.model('Business', businessSchema);

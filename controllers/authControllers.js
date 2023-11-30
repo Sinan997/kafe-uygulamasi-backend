@@ -62,7 +62,7 @@ const refreshTokenController = (req, res) => {
 
 const generateToken = (user, secretKey, expiresIn) => {
   options = {
-    _id: user.id,
+    _id: user._id,
     email: user.email,
     username: user.username,
     role: user.role,

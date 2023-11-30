@@ -5,23 +5,17 @@ const {
   allCategories,
   deleteCategory,
   setCategoriesIndex,
-  addProduct,
-  changeCategoryName,
 } = require('../controllers/menuController');
-const { isAdmin } = require('../middlewares/isAdminValidator');
+const { isBusiness } = require('../middlewares/isBusinessValidator');
 const { verifyToken } = require('../middlewares/verifyToken');
 
-router.get('/all-categories', verifyToken, isAdmin, allCategories);
+router.get('/all-categories', verifyToken, isBusiness, allCategories);
 
-router.post('/add-category', verifyToken, isAdmin, addCategory);
+router.post('/add-category', verifyToken, isBusiness, addCategory);
 
-router.delete('/delete-category', verifyToken, isAdmin, deleteCategory);
+router.delete('/delete-category', verifyToken, isBusiness, deleteCategory);
 
-router.post('/set-categories-index', verifyToken, isAdmin, setCategoriesIndex);
-
-router.post('/change-categoryName', verifyToken, isAdmin, changeCategoryName);
-
-router.post('/add-product', verifyToken, isAdmin, addProduct);
+router.post('/set-categories-index', verifyToken, isBusiness, setCategoriesIndex);
 
 
 module.exports = router;

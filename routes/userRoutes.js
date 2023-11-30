@@ -8,7 +8,7 @@ const router = express.Router();
 router.get('/all-users', verifyToken, isAdmin, getAllUsers);
 
 router.post('/add-user', verifyToken, isAdmin, validateSignUp, addUser);
-
+    
 router.delete('/delete-user', verifyToken, isAdmin, deleteUser);
 
 router.put('/update-user', verifyToken, isAdmin, updateUser);

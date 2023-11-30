@@ -93,24 +93,23 @@ const deleteUser = async (req, res) => {
 };
 
 const updateUser = async (req, res) => {
-  const { _id, password } = req.body;
+  const { _id, username, password } = req.body;
   let user;
   try {
     if (password) {
       const hashedPassword = await bcrypt.hash(password, 10);
       user = await User.findByIdAndUpdate(
         _id,
-        { ...req.body, password: hashedPassword },
+        { username, password: hashedPassword },
         { new: true },
       );
-      return res.status(200).json({ user, message: 'Kullanıcı Güncellendi', success: true });
+      return res.status(200).json({ message: 'Kullanıcı Güncellendi', success: true });
     } else {
-      req.body.password = undefined;
-      user = await User.findByIdAndUpdate(_id, { ...req.body }, { new: true });
+      user = await User.findByIdAndUpdate(_id, { username }, { new: true });
     }
     user.password = undefined;
     user.__v = undefined;
-    return res.status(200).json({ user, message: 'Kullanıcı Güncellendi', success: true });
+    return res.status(200).json({ message: 'Kullanıcı Güncellendi', success: true });
   } catch (error) {
     console.log(error);
     return res.status(404).json({ message: 'Kullanıcı Güncellenemedi', success: false });
