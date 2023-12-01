@@ -9,7 +9,7 @@ const getAllUsers = async (req, res) => {
       .status(404)
       .json({ message: 'Userları getirme işlemi başarısız oldu', success: false });
   }
-  return res.status(200).json({ users, success: true });
+  return res.status(200).json({ users, message: 'Userları Başarıyla getirildi', success: true });
 };
 
 const addUser = async (req, res) => {
@@ -31,12 +31,8 @@ const addUser = async (req, res) => {
     try {
       const user = await new User({ email, username, role, password: hashedPw }).save();
 
-      user.password = undefined;
-      user.__v = undefined;
       if (user) {
-        return res
-          .status(201)
-          .json({ user: user, message: 'Kullanıcı Oluşturuldu', success: true });
+        return res.status(201).json({ message: 'Kullanıcı Oluşturuldu', success: true });
       }
     } catch (error) {
       console.log(error);
@@ -57,11 +53,9 @@ const addUser = async (req, res) => {
       businessId: business._id,
     }).save();
 
-    user.password = undefined;
-    user.__v = undefined;
     business.addToUsers(user._id);
     if (user) {
-      return res.status(201).json({ user: user, message: 'Kullanıcı Oluşturuldu', success: true });
+      return res.status(201).json({ message: 'Kullanıcı Oluşturuldu', success: true });
     }
   } catch (error) {
     console.log(error);
@@ -107,8 +101,6 @@ const updateUser = async (req, res) => {
     } else {
       user = await User.findByIdAndUpdate(_id, { username }, { new: true });
     }
-    user.password = undefined;
-    user.__v = undefined;
     return res.status(200).json({ message: 'Kullanıcı Güncellendi', success: true });
   } catch (error) {
     console.log(error);

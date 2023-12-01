@@ -27,8 +27,8 @@ const getAllProducts = async (req, res) => {
   }
 
   try {
-    const products = await Product.find({ categoryId });
-
+    const category = await Category.findById(categoryId).populate('products');
+    const products = category.products;
     return res
       .status(201)
       .json({ message: 'Ürünler Başarıyla Getirildi', success: true, products });
@@ -40,18 +40,17 @@ const getAllProducts = async (req, res) => {
 
 const addProduct = async (req, res) => {
   const { categoryId, name, price, isAvailable } = req.body;
-
+  if (!name || !price.toString() || !categoryId) {
+    return res.status(404).json({ message: 'Eksik Bilgi', success: false });
+  }
   try {
-    const index = (await Product.find({ categoryId })).length;
+    const category = await Category.findById(categoryId).populate('products');
+    const index = category.products.length;
 
-    if (!name || !price.toString() || !categoryId) {
-      return res.status(404).json({ message: 'Eksik Bilgi', success: false });
-    }
+    const product = await new Product({ name, index, price, categoryId, isAvailable }).save();
+    await category.addToProducts(product._id);
 
-    const newProduct = new Product({ name, index, price, categoryId, isAvailable });
-
-    const product = await newProduct.save();
-    return res.status(201).json({ message: 'Ürün oluşturuldu', success: true, product });
+    return res.status(201).json({ message: 'Ürün oluşturuldu', success: true });
   } catch (error) {
     console.log(error);
     return res.status(404).json({ message: 'Ürün oluşturulurken hata oluştu', success: false });
@@ -81,10 +80,12 @@ const deleteProduct = async (req, res) => {
 
   try {
     const product = await Product.findByIdAndDelete(productId);
+    const category = await Category.findById(product.categoryId);
+    await category.removeFromProducts(productId);
     if (!product) {
       return res.status(404).json({ message: 'Ürün Silinirken Hata Oluştu', success: false });
     }
-    return res.status(201).json({ message: 'Ürünler Başarıyla Getirildi', success: true, product });
+    return res.status(201).json({ message: 'Ürünler Başarıyla Getirildi', success: true });
   } catch (error) {
     console.log(error);
     return res.status(404).json({ message: 'Ürün Silinirken Hata Oluştu', success: false });
@@ -98,7 +99,7 @@ const setProductsIndex = async (req, res) => {
     return res.status(406).json({ message: 'Ürünler Güncellenirken Teknik Hata', success: false });
   }
   products.forEach((product) => {
-    promises.push(updateProduct(product));
+    promises.push(updateProductIndex(product));
   });
 
   try {
@@ -111,20 +112,21 @@ const setProductsIndex = async (req, res) => {
   }
 };
 
+const updateProductIndex = (product) => {
+  return Product.findByIdAndUpdate(product._id, product);
+};
+
 const updateProductAsync = async (req, res) => {
   const { productId } = req.body;
   try {
-    const product = await Product.findByIdAndUpdate(productId, { ...req.body }, { new: true });
-    return res.status(200).json({ message: 'Ürün Başarıyla Güncellendi', success: true, product });
+    await Product.findByIdAndUpdate(productId, { ...req.body });
+    return res.status(200).json({ message: 'Ürün Başarıyla Güncellendi', success: true });
   } catch (error) {
     console.log(error);
     return res.status(404).json({ message: 'Ürün Güncellenirken Teknik Hata', success: false });
   }
 };
 
-const updateProduct = (product) => {
-  return Product.findByIdAndUpdate(product._id, product);
-};
 
 module.exports = {
   getCategory,
@@ -133,5 +135,5 @@ module.exports = {
   changeCategoryName,
   deleteProduct,
   setProductsIndex,
-  updateProductAsync
+  updateProductAsync,
 };
