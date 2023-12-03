@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 
 const loginController = async (req, res) => {
   const { username, password } = req.body;
-  const user = await User.findOne({ username });
+  const user = await User.findOne({ username }).populate('businessId', 'name');
 
   if (!user) {
     return res.status(400).json({ message: 'Kullanıcı bulunamadı', success: false });
@@ -14,7 +14,7 @@ const loginController = async (req, res) => {
   const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
   if (isPasswordCorrect) {
-    const accessToken = generateToken(user, process.env.JWT_SECRET_KEY, '20m');
+    const accessToken = generateToken(user, process.env.JWT_SECRET_KEY, '1m');
     const refreshToken = generateToken(user, process.env.JWT_REFRESH_KEY, '7d');
     RefreshToken.deleteOne({ userId: user._id }).then((res) => {
       new RefreshToken({ token: refreshToken, userId: user._id }).save();
@@ -52,9 +52,10 @@ const refreshTokenController = (req, res) => {
     username: decodedToken.username,
     role: decodedToken.role,
     businessId: decodedToken.businessId,
+    businessName: decodedToken.businessName,
   };
 
-  const newAccessToken = generateToken(user, process.env.JWT_SECRET_KEY, '20m');
+  const newAccessToken = generateToken(user, process.env.JWT_SECRET_KEY, '1m');
   const newRefreshToken = generateToken(user, process.env.JWT_REFRESH_KEY, '7d');
 
   return res.status(200).json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
@@ -67,6 +68,7 @@ const generateToken = (user, secretKey, expiresIn) => {
     username: user.username,
     role: user.role,
     businessId: user.businessId,
+    businessName: user.businessId?.name,
   };
   return jwt.sign(options, secretKey, { expiresIn });
 };
