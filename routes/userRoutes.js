@@ -3,9 +3,10 @@ const { getAllUsers, addUser, deleteUser, updateUser } = require('../controllers
 const { isAdmin } = require('../middlewares/isAdminValidator');
 const { validateSignUp } = require('../middlewares/signUpValidation');
 const { verifyToken } = require('../middlewares/verifyToken');
+const { isAdminOrBusiness } = require('../middlewares/isAdminOrBusinessValidator');
 const router = express.Router();
 
-router.get('/all-users', verifyToken, isAdmin, getAllUsers);
+router.get('/all-users', verifyToken, isAdminOrBusiness, getAllUsers);
 
 router.post('/add-user', verifyToken, isAdmin, validateSignUp, addUser);
     

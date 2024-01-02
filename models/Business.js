@@ -4,8 +4,11 @@ const Schema = mongoose.Schema;
 
 const businessSchema = new Schema({
   name: { type: String, required: true },
+  address: { type: String },
+  logo: { type: String },
   categories: [{ type: Schema.Types.ObjectId, ref: 'Category' }],
-  users: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  waiters: [{ type: Schema.Types.ObjectId, ref: 'Waiter' }],
+  ownerId: { type: Schema.Types.ObjectId, ref: 'User' },
 });
 
 businessSchema.methods.addToUsers = async function (userId) {
@@ -24,7 +27,9 @@ businessSchema.methods.addToCategories = async function (categoryId) {
 
 businessSchema.methods.removeFromCategories = async function (categoryId) {
   let currentCategories = [...this.categories];
-  currentCategories = currentCategories.filter((category) => category._id.toString() !== categoryId);
+  currentCategories = currentCategories.filter(
+    (category) => category._id.toString() !== categoryId,
+  );
   this.categories = currentCategories;
   await this.save();
 };

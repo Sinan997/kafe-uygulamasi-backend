@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Business = require('../models/Business');
 const bcrypt = require('bcryptjs');
+const { roles } = require('../constants/roles');
 
 const getAllUsers = async (req, res) => {
   const users = await User.find().select('-password -__v').populate('businessId', 'name');

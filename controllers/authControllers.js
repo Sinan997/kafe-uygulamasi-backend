@@ -2,10 +2,11 @@ const User = require('../models/User');
 const RefreshToken = require('../models/RefreshToken');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { roles } = require('../constants/roles');
 
 const loginController = async (req, res) => {
   const { username, password } = req.body;
-  const user = await User.findOne({ username }).populate('businessId', 'name');
+  const user = await User.findOne({ username }).populate('businessId');
 
   if (!user) {
     return res.status(400).json({ message: 'Kullanıcı bulunamadı', success: false });
@@ -16,7 +17,7 @@ const loginController = async (req, res) => {
   if (isPasswordCorrect) {
     const accessToken = generateToken(user, process.env.JWT_SECRET_KEY, '1m');
     const refreshToken = generateToken(user, process.env.JWT_REFRESH_KEY, '7d');
-    RefreshToken.deleteOne({ userId: user._id }).then((res) => {
+    RefreshToken.deleteOne({ userId: user._id }).then(() => {
       new RefreshToken({ token: refreshToken, userId: user._id }).save();
     });
     return res.status(200).json({ accessToken, refreshToken, success: true });

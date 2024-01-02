@@ -7,16 +7,15 @@ const startDB = async () => {
     const isExist = await User.findOne({ username: 'admin' });
 
     if (!isExist) {
-      bcrypt.hash('123', 10).then(async (hashedPw) => {
-        const user = new User({
-          name: 'admin',
-          username: 'admin',
-          role: 'admin',
-          password: hashedPw,
-        });
-        await user.save();
-        console.log('admin yoktu ve admin oluşturuldu');
+      const hashedPw = await bcrypt.hash('123', 10);
+      const user = new User({
+        email: 'admin',
+        username: 'admin',
+        password: hashedPw,
+        role: 'admin',
       });
+      await user.save();
+      console.log('admin created for initialization.');
     }
   });
 };

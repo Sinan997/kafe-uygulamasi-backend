@@ -10,6 +10,7 @@ const verifyToken = (req, res, next) => {
       jwt.verify(token, process.env.JWT_SECRET_KEY);
       const decodedToken = jwt.decode(token);
       req.user = decodedToken;
+      req.role = decodedToken.role;
       next();
     } catch (error) {
       return res.status(401).json(error);
@@ -18,5 +19,5 @@ const verifyToken = (req, res, next) => {
 };
 
 module.exports = {
-  verifyToken
+  verifyToken,
 };

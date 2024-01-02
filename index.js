@@ -6,6 +6,7 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const menuRoutes = require('./routes/menuRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 require('dotenv').config();
 
 app.use(cors());
@@ -14,6 +15,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/category', categoryRoutes);
+app.use('/api/admin', adminRoutes);
+
+// qrcode
 app.post('/api/generate-qrcode', (req, res) => {
   const businessUrl = req.body.businessUrl;
   const qrcode = require('qrcode');
