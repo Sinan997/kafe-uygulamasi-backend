@@ -12,12 +12,13 @@ const addBusiness = async (req, res) => {
         .status(406)
         .json({ code: 'MISSING_FIELDS', message: 'Eksik veri', success: false });
     }
-    console.log('after if');
+
     const isNameExist = await Business.findOne({ name });
     if (isNameExist) {
-      return res.status(406).json({ code: 'NAME_EXIST', message: 'name exist', success: false });
+      return res
+        .status(406)
+        .json({ code: 'NAME_EXIST', data: { name }, message: 'name exist', success: false });
     }
-
 
     // CREATE BUSINESS ADMIN
 

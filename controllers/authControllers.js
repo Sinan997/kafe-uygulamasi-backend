@@ -2,34 +2,52 @@ const User = require('../models/User');
 const RefreshToken = require('../models/RefreshToken');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { roles } = require('../constants/roles');
 
 const loginController = async (req, res) => {
   const { username, password } = req.body;
-  const user = await User.findOne({ username }).populate('businessId');
+  try {
+    const user = await User.findOne({ username }).populate('businessId');
 
-  if (!user) {
-    return res.status(400).json({ message: 'Kullanıcı bulunamadı', success: false });
-  }
+    if (!user) {
+      return res.status(400).json({
+        code: 'USER_NOT_FOUND',
+        data: { username },
+        message: `User named '${username}' not found.`,
+      });
+    }
 
-  const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
-  if (isPasswordCorrect) {
-    const accessToken = generateToken(user, process.env.JWT_SECRET_KEY, '1m');
-    const refreshToken = generateToken(user, process.env.JWT_REFRESH_KEY, '7d');
-    RefreshToken.deleteOne({ userId: user._id }).then(() => {
-      new RefreshToken({ token: refreshToken, userId: user._id }).save();
-    });
-    return res.status(200).json({ accessToken, refreshToken, success: true });
-  } else {
-    return res.status(400).json({ message: 'Şifre yanlış', success: false });
+    if (isPasswordCorrect) {
+      const accessToken = generateToken(user, process.env.JWT_SECRET_KEY, '1m');
+      const refreshToken = generateToken(user, process.env.JWT_REFRESH_KEY, '7d');
+      RefreshToken.deleteOne({ userId: user._id }).then(() => {
+        new RefreshToken({ token: refreshToken, userId: user._id }).save();
+      });
+      return res.status(200).json({
+        accessToken,
+        refreshToken,
+        code: 'LOGIN_SUCCESSFULL',
+        message: 'Logged in succesfully.',
+      });
+    } else {
+      return res.status(400).json({ code: 'WRONG_PASSWORD', message: 'Wrong Password' });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
   }
 };
 
-const logoutController = async (req) => {
+const logoutController = async (req, res) => {
   const { refreshToken } = req.body;
 
-  RefreshToken.deleteOne({ token: refreshToken });
+  try {
+    RefreshToken.deleteOne({ token: refreshToken });
+    return res.status(200).json({ message: 'Çıkış yapıldı', success: true });
+  } catch (error) {
+    return res.status(400).json({ message: 'Çıkış yapılamadı', success: false });
+  }
 };
 
 const refreshTokenController = (req, res) => {
