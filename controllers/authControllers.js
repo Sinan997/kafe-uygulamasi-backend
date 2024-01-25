@@ -19,11 +19,12 @@ const loginController = async (req, res) => {
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
     if (isPasswordCorrect) {
-      const accessToken = generateToken(user, process.env.JWT_SECRET_KEY, '1m');
-      const refreshToken = generateToken(user, process.env.JWT_REFRESH_KEY, '7d');
-      RefreshToken.deleteOne({ userId: user._id }).then(() => {
-        new RefreshToken({ token: refreshToken, userId: user._id }).save();
-      });
+      const accessToken = generateToken(user, process.env.JWT_SECRET_KEY, '1h');
+      const refreshToken = generateToken(user, process.env.JWT_REFRESH_KEY, '1d');
+
+      await RefreshToken.deleteMany({ userId: user._id });
+      await new RefreshToken({ token: refreshToken, userId: user._id }).save();
+
       return res.status(200).json({
         accessToken,
         refreshToken,
@@ -43,41 +44,64 @@ const logoutController = async (req, res) => {
   const { refreshToken } = req.body;
 
   try {
-    RefreshToken.deleteOne({ token: refreshToken });
-    return res.status(200).json({ message: 'Çıkış yapıldı', success: true });
+    await RefreshToken.deleteOne({ token: refreshToken });
+    return res.status(200).json({ message: 'Logout completed successfully.' });
   } catch (error) {
-    return res.status(400).json({ message: 'Çıkış yapılamadı', success: false });
+    console.log(error);
+    return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
   }
 };
 
-const refreshTokenController = (req, res) => {
+const refreshTokenController = async (req, res) => {
   const { refreshToken } = req.body;
+  try {
+    if (!refreshToken) {
+      console.log('bodyde yok');
+      return res
+        .status(403)
+        .json({ code: 'REFRESH_TOKEN_NOT_FOUND_BODY', message: 'Refresh token not found.' });
+    }
 
-  if (!refreshToken) {
-    return res.status(400).json({ message: 'Token bulunamadı', success: false });
+    isRefreshTokenExistInDb = await RefreshToken.findOne({ token: refreshToken });
+    console.log({ refreshToken, db: isRefreshTokenExistInDb });
+
+    if (!isRefreshTokenExistInDb) {
+      console.log('dbde yok');
+      return res
+        .status(403)
+        .json({ code: 'REFRESH_TOKEN_NOT_FOUND_DB', message: 'Refresh token not found.' });
+    }
+
+    await RefreshToken.findOneAndDelete({ token: refreshToken });
+
+    const decodedToken = jwt.decode(refreshToken);
+
+    if (new Date().getTime() > decodedToken.exp * 1000) {
+      return res.status(403).json({
+        code: 'REFRESH_TOKEN_EXPIRED',
+        message: 'Refresh token has expired.',
+      });
+    }
+
+    const user = {
+      _id: decodedToken._id,
+      email: decodedToken.email,
+      username: decodedToken.username,
+      role: decodedToken.role,
+      businessId: decodedToken.businessId,
+      businessName: decodedToken.businessName,
+    };
+
+    const newAccessToken = generateToken(user, process.env.JWT_SECRET_KEY, '1h');
+    const newRefreshToken = generateToken(user, process.env.JWT_REFRESH_KEY, '1d');
+
+    await new RefreshToken({ token: newRefreshToken, userId: user._id }).save();
+
+    return res.status(200).json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
   }
-
-  RefreshToken.findOneAndDelete({ token: refreshToken });
-
-  const decodedToken = jwt.decode(refreshToken);
-
-  if (new Date().getTime() > decodedToken.exp * 1000) {
-    return res.status(400).json({ message: 'Refresh Tokenın süresi bitmiş', success: false });
-  }
-
-  const user = {
-    _id: decodedToken._id,
-    email: decodedToken.email,
-    username: decodedToken.username,
-    role: decodedToken.role,
-    businessId: decodedToken.businessId,
-    businessName: decodedToken.businessName,
-  };
-
-  const newAccessToken = generateToken(user, process.env.JWT_SECRET_KEY, '1m');
-  const newRefreshToken = generateToken(user, process.env.JWT_REFRESH_KEY, '7d');
-
-  return res.status(200).json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
 };
 
 const generateToken = (user, secretKey, expiresIn) => {
