@@ -4,108 +4,145 @@ const bcrypt = require('bcryptjs');
 const { roles } = require('../constants/roles');
 
 const getAllUsers = async (req, res) => {
-  const users = await User.find().select('-password -__v').populate('businessId', 'name');
-  if (!users) {
-    return res
-      .status(404)
-      .json({ message: 'Userları getirme işlemi başarısız oldu', success: false });
+  try {
+    const businessId = req.user.businessId._id;
+    const users = await User.find({ businessId }).select('-password -__v').populate('businessId');
+    if (!users) {
+      return res.status(400).json({
+        code: 'IDENTITY_TABLE',
+        message: 'An error occurred while bringing in the users.',
+      });
+    }
+    return res.status(200).json({ users });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
   }
-  return res.status(200).json({ users, message: 'Userları Başarıyla getirildi', success: true });
 };
 
 const addUser = async (req, res) => {
-  const { email, username, password, role, businessName } = req.body;
-  const isUsernameExist = await User.findOne({ username });
-  if (isUsernameExist) {
-    return res.status(406).json({ message: 'Username kullanılmaktadır', success: false });
-  }
-
-  const isEmailExist = await User.findOne({ email });
-  if (isEmailExist) {
-    return res.status(406).json({ message: 'Email kullanılmaktadır', success: false });
-  }
-
-  const hashedPw = await bcrypt.hash(password, 10);
-
-  // if new user is admin
-  if (role === 'admin') {
-    try {
-      const user = await new User({ email, username, role, password: hashedPw }).save();
-
-      if (user) {
-        return res.status(201).json({ message: 'Kullanıcı Oluşturuldu', success: true });
-      }
-    } catch (error) {
-      console.log(error);
-      return res.status(404).json({ message: 'Kullanıcı Oluşturulamadı', success: false });
-    }
-  }
-
-  // if new user is new business
-  // create Business
-  const business = await new Business({ name: businessName }).save();
-
+  const { email, password } = req.body;
+  let { username } = req.body;
+  const businessName = req.user.businessId.name;
+  const businessId = req.user.businessId._id;
   try {
+    // VALIDATE FIELDS
+    if (!username || !email || !password) {
+      return res.status(406).json({ code: 'MISSING_FIELDS', message: 'Fill required places.' });
+    }
+
+    // update username as => username.businessName
+    username = username.toLowerCase().replace(/\s/g, '') + '.' + businessName;
+
+    // VALIDATE IS USERNAME AND EMAIL EXISTS
+    const isUsernameExist = await User.findOne({ username });
+    if (isUsernameExist) {
+      return res.status(406).json({
+        code: 'USERNAME_EXIST',
+        data: { username },
+        message: `${username} is already used`,
+      });
+    }
+
+    const isEmailExist = await User.findOne({ email });
+    if (isEmailExist) {
+      return res.status(406).json({
+        code: 'EMAIL_EXIST',
+        message: `Email is already used`,
+      });
+    }
+
+    const hashedPw = await bcrypt.hash(password, 10);
+
+    // CREATE USER
     const user = await new User({
-      email,
       username,
+      email,
       password: hashedPw,
-      role,
-      businessId: business._id,
+      role: roles.Waiter,
+      businessId,
     }).save();
 
-    business.addToUsers(user._id);
-    if (user) {
-      return res.status(201).json({ message: 'Kullanıcı Oluşturuldu', success: true });
-    }
+    // ADD TO BUSINESS WAITERS LIST
+    const business = await Business.findById(businessId);
+    await business.addToWaiters(user._id);
+
+    return res.status(201).json({ code: 'USER_CREATED', message: 'User created successfully.' });
   } catch (error) {
     console.log(error);
-    return res.status(404).json({ message: 'Kullanıcı Oluşturulamadı', success: false });
+    return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
   }
 };
 
 const deleteUser = async (req, res) => {
-  const { id } = req.body;
+  const { userId } = req.body;
+  const businessId = req.user.businessId._id;
   try {
-    const user = await User.findById(id);
+    const user = await User.findByIdAndDelete(userId);
 
     if (!user) {
-      return res.status(404).json({ message: 'Kullanıcı Bulunamadı', success: false });
+      return res.status(404).json({ message: 'User not found.' });
     }
 
-    if (user.businessId) {
-      const id = user.businessId.toString();
-      await Business.findByIdAndDelete(id);
-    }
+    const business = await Business.findById(businessId);
+    await business.removeFromWaiters(user._id);
 
-    await user.deleteOne();
-
-    return res.status(201).json({ message: 'Kullanıcı Silindi', success: true });
+    return res
+      .status(200)
+      .json({ code: 'USER_DELETED', message: 'User has been deleted succesfully.' });
   } catch (error) {
     console.log(error);
-    return res.status(404).json({ message: 'Kullanıcı Silinemedi', success: false });
+    return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
   }
 };
 
 const updateUser = async (req, res) => {
-  const { _id, username, password } = req.body;
-  let user;
+  const { _id, email, password } = req.body;
+  let { username } = req.body;
+  const businessName = req.user.businessId.name;
+
   try {
-    if (password) {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      user = await User.findByIdAndUpdate(
-        _id,
-        { username, password: hashedPassword },
-        { new: true },
-      );
-      return res.status(200).json({ message: 'Kullanıcı Güncellendi', success: true });
+    // MANIPULATE USERNAME
+    if (!username.includes('.' + businessName)) {
+      username = username.toLowerCase().replace(/\s/g, '') + '.' + businessName;
     } else {
-      user = await User.findByIdAndUpdate(_id, { username }, { new: true });
+      username = username.toLowerCase().replace(/\s/g, '');
     }
-    return res.status(200).json({ message: 'Kullanıcı Güncellendi', success: true });
+
+    // CHECK IS USER EXISTING
+    const user = await User.findById(_id);
+    if (!(user.username === username)) {
+      const isUsernameExist = await User.findOne({ username });
+      if (isUsernameExist) {
+        return res.status(406).json({
+          code: 'USERNAME_EXIST',
+          data: { username },
+          message: `${username} is already used`,
+        });
+      }
+    }
+
+    // CHECK IS EMAIL EXISTING
+    if (!user.email === email) {
+      const isEmailExist = await User.findOne({ email });
+      if (isEmailExist) {
+        return res.status(406).json({
+          code: 'EMAIL_EXIST',
+          message: `Email is already used`,
+        });
+      }
+    }
+
+    const updateObject = { username, email };
+    if (password) {
+      const hashedPw = await bcrypt.hash(password, 10);
+      updateObject.password = hashedPw;
+    }
+    await User.findByIdAndUpdate(_id, updateObject);
+    return res.status(200).json({ code: 'USER_UPDATED', message: 'User updated successfully.' });
   } catch (error) {
     console.log(error);
-    return res.status(404).json({ message: 'Kullanıcı Güncellenemedi', success: false });
+    return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
   }
 };
 

@@ -11,17 +11,18 @@ const businessSchema = new Schema({
   ownerId: { type: Schema.Types.ObjectId, ref: 'User' },
 });
 
-businessSchema.methods.addToUsers = async function (userId) {
-  const currentUsers = this.users;
-  currentUsers.push(userId);
-  this.users = currentUsers;
+businessSchema.methods.addToWaiters = async function (userId) {
+  this.waiters = [...this.waiters, userId];
+  await this.save();
+};
+
+businessSchema.methods.removeFromWaiters = async function (userId) {
+  this.waiters = [...this.waiters].filter((waiter) => waiter._id.toString() !== userId.toString());
   await this.save();
 };
 
 businessSchema.methods.addToCategories = async function (categoryId) {
-  const currentCategories = this.categories;
-  currentCategories.push(categoryId);
-  this.categories = currentCategories;
+  this.categories = [...this.categories, categoryId];
   await this.save();
 };
 

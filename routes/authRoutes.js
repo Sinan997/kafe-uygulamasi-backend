@@ -6,9 +6,7 @@ const {
   refreshTokenController,
 } = require('../controllers/authControllers');
 
-const { validateLoginFields } = require('../middlewares/loginValidation');
-
-router.post('/login', validateLoginFields, loginController);
+router.post('/login', loginController);
 
 router.post('/logout', logoutController);
 

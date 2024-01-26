@@ -1,17 +1,14 @@
-const Business = require('../models/Business');
+const { roles } = require('../constants/roles');
 
-const isBusiness = async (req, res, next) => {
+const isBusiness = (req, res, next) => {
   try {
-    const user = req.user;
-    const business = await Business.findById(req.user.businessId)
-    req.business = business;
-    if (business.users.includes(user._id) && user.role === 'business') {
+    if (req.role === roles.Business) {
       next();
     } else {
-      return res.status(403).json({ message: 'Unauthorized', success: false });
+      return res.status(403).json({ message: 'Unauthorized.', success: false });
     }
   } catch (error) {
-    return res.status(403).json({ message: 'Unauthorized', success: false });
+    return res.status(401).json({ message: 'Token is not valid.', success: false });
   }
 };
 

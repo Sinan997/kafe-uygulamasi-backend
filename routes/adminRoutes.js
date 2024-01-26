@@ -4,7 +4,7 @@ const {
   addBusiness,
   getAllBusinesses,
   deleteBusiness,
-  editBusiness,
+  updateBusiness,
 } = require('../controllers/admin-controllers');
 
 const { isAdmin } = require('../middlewares/isAdminValidator');
@@ -16,6 +16,6 @@ router.post('/add-business', verifyToken, isAdmin, addBusiness);
 
 router.delete('/delete-business', verifyToken, isAdmin, deleteBusiness);
 
-router.put('/update-business', verifyToken, isAdmin, editBusiness);
+router.put('/update-business', verifyToken, isAdmin, updateBusiness);
 
 module.exports = router;

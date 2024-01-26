@@ -5,7 +5,7 @@ const isAdmin = (req, res, next) => {
     if (req.role === roles.Admin) {
       next();
     } else {
-      return res.status(403).json({ message: 'Yetkili değil', success: false });
+      return res.status(403).json({ message: 'Unauthorized.', success: false });
     }
   } catch (error) {
     return res.status(401).json({ message: 'Token geçersiz', success: false });

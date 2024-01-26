@@ -6,11 +6,16 @@ const jwt = require('jsonwebtoken');
 const loginController = async (req, res) => {
   const { username, password } = req.body;
   try {
+    // VALIDATE FIELDS
+    if (!username || !password) {
+      return res.status(406).json({ code: 'MISSING_FIELDS', message: 'Fill required places.' });
+    }
+
     const user = await User.findOne({ username }).populate('businessId');
 
     if (!user) {
       return res.status(400).json({
-        code: 'USER_NOT_FOUND',
+        code: 'USER_NOT_FOUND_AUTH',
         data: { username },
         message: `User named '${username}' not found.`,
       });
@@ -56,7 +61,6 @@ const refreshTokenController = async (req, res) => {
   const { refreshToken } = req.body;
   try {
     if (!refreshToken) {
-      console.log('bodyde yok');
       return res
         .status(403)
         .json({ code: 'REFRESH_TOKEN_NOT_FOUND_BODY', message: 'Refresh token not found.' });

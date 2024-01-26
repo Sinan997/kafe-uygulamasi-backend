@@ -13,18 +13,19 @@ const addBusiness = async (req, res) => {
 
     const isNameExist = await Business.findOne({ name });
     if (isNameExist) {
-      return res.status(406).json({ code: 'NAME_EXIST', data: { name }, message: 'name exist' });
+      return res
+        .status(406)
+        .json({ code: 'NAME_EXIST', data: { name }, message: `${name} is already used` });
     }
 
     // CREATE BUSINESS ADMIN
-
     const username = name.toLowerCase().replace(/\s/g, '') + '.admin';
 
     const hashedPw = await bcrypt.hash(password, 10);
 
     const user = await new User({
-      email,
       username,
+      email,
       password: hashedPw,
       role: roles.Business,
     }).save();
@@ -48,7 +49,7 @@ const getAllBusinesses = async (req, res) => {
   try {
     const businesses = await Business.find().populate('ownerId');
     if (!businesses) {
-      return res.status(404).json({
+      return res.status(400).json({
         code: 'BUSINESS_TABLE',
         message: 'An error occurred while bringing in the businesses.',
       });
@@ -63,32 +64,36 @@ const getAllBusinesses = async (req, res) => {
 const deleteBusiness = async (req, res) => {
   const { id } = req.body;
   try {
+    // DELETE BUSINESS
     const business = await Business.findByIdAndDelete(id);
-    console.log(business);
     if (!business) {
       return res.status(404).json({ code: 'BUSINESS_NOT_FOUND', message: 'Business not found.' });
     }
+    // DELETE OWNER
     await User.findByIdAndDelete(business.ownerId);
 
+    // TODO: delete busıness's waiters
     return res
       .status(200)
-      .json({ code: 'BUSINESS_DELETED', message: 'Business has been deleted.' });
+      .json({ code: 'BUSINESS_DELETED', message: 'Business has been deleted succesfully.' });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
   }
 };
 
-const editBusiness = async (req, res) => {
+const updateBusiness = async (req, res) => {
   const { _id, ownerId, name, email, password } = req.body;
   try {
     const updateObject = { email };
     if (password) {
-      console.log('password var');
       const hashedPw = await bcrypt.hash(password, 10);
       updateObject.password = hashedPw;
     }
+    // TODO: check is business name exist
     await Business.findByIdAndUpdate(_id, { name });
+
+    // TODO: check is email exist
     await User.findByIdAndUpdate(ownerId, updateObject);
 
     return res
@@ -103,5 +108,5 @@ module.exports = {
   addBusiness,
   getAllBusinesses,
   deleteBusiness,
-  editBusiness,
+  updateBusiness,
 };
