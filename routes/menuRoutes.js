@@ -5,6 +5,10 @@ const {
   allCategories,
   deleteCategory,
   setCategoriesIndex,
+  getCategory,
+  addProduct,
+  getAllProducts,
+  setProductsIndex
 } = require('../controllers/menuController');
 const { isBusiness } = require('../middlewares/isBusinessValidator');
 const { verifyToken } = require('../middlewares/verifyToken');
@@ -17,5 +21,12 @@ router.delete('/delete-category', verifyToken, isBusiness, deleteCategory);
 
 router.post('/set-categories-index', verifyToken, isBusiness, setCategoriesIndex);
 
+router.get('/get-category/:categoryId', verifyToken, isBusiness, getCategory);
+
+router.get('/all-products/:categoryId', verifyToken, isBusiness, getAllProducts);
+
+router.post('/add-product', verifyToken, isBusiness, addProduct);
+
+router.post('/set-products-index', verifyToken, isBusiness, setProductsIndex);
 
 module.exports = router;

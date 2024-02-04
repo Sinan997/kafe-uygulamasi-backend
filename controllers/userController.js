@@ -89,7 +89,7 @@ const deleteUser = async (req, res) => {
 
     return res
       .status(200)
-      .json({ code: 'USER_DELETED', message: 'User has been deleted succesfully.' });
+      .json({ code: 'USER_DELETED', message: 'User deleted succesfully.' });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });

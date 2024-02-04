@@ -17,7 +17,9 @@ businessSchema.methods.addToWaiters = async function (userId) {
 };
 
 businessSchema.methods.removeFromWaiters = async function (userId) {
-  this.waiters = [...this.waiters].filter((waiter) => waiter._id.toString() !== userId.toString());
+  let currentWaiters = [...this.waiters];
+  currentWaiters = currentWaiters.filter((waiter) => waiter._id.toString() !== userId.toString());
+  this.waiters = currentWaiters;
   await this.save();
 };
 
@@ -29,7 +31,7 @@ businessSchema.methods.addToCategories = async function (categoryId) {
 businessSchema.methods.removeFromCategories = async function (categoryId) {
   let currentCategories = [...this.categories];
   currentCategories = currentCategories.filter(
-    (category) => category._id.toString() !== categoryId,
+    (category) => category._id.toString() !== categoryId.toString(),
   );
   this.categories = currentCategories;
   await this.save();

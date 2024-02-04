@@ -67,10 +67,8 @@ const refreshTokenController = async (req, res) => {
     }
 
     isRefreshTokenExistInDb = await RefreshToken.findOne({ token: refreshToken });
-    console.log({ refreshToken, db: isRefreshTokenExistInDb });
 
     if (!isRefreshTokenExistInDb) {
-      console.log('dbde yok');
       return res
         .status(403)
         .json({ code: 'REFRESH_TOKEN_NOT_FOUND_DB', message: 'Refresh token not found.' });

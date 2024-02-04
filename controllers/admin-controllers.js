@@ -75,7 +75,7 @@ const deleteBusiness = async (req, res) => {
     // TODO: delete busıness's waiters
     return res
       .status(200)
-      .json({ code: 'BUSINESS_DELETED', message: 'Business has been deleted succesfully.' });
+      .json({ code: 'BUSINESS_DELETED', message: 'Business deleted succesfully.' });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
