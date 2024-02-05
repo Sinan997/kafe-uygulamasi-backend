@@ -8,10 +8,15 @@ const {
   getCategory,
   addProduct,
   getAllProducts,
-  setProductsIndex
+  setProductsIndex,
+  changeCategoryName,
+  deleteProduct,
+  updateProductAsync
 } = require('../controllers/menuController');
 const { isBusiness } = require('../middlewares/isBusinessValidator');
 const { verifyToken } = require('../middlewares/verifyToken');
+
+// TODO: add isOwner middleware
 
 router.get('/all-categories', verifyToken, isBusiness, allCategories);
 
@@ -28,5 +33,11 @@ router.get('/all-products/:categoryId', verifyToken, isBusiness, getAllProducts)
 router.post('/add-product', verifyToken, isBusiness, addProduct);
 
 router.post('/set-products-index', verifyToken, isBusiness, setProductsIndex);
+
+router.post('/change-category-name', verifyToken, isBusiness, changeCategoryName);
+
+router.delete('/delete-product', verifyToken, isBusiness, deleteProduct);
+
+router.post('/update-product', verifyToken, isBusiness, updateProductAsync);
 
 module.exports = router;

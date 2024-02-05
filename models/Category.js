@@ -17,7 +17,7 @@ categorySchema.methods.addToProducts = async function (productId) {
 
 categorySchema.methods.removeFromProducts = async function (productId) {
   let currentProducts = [...this.products];
-  currentProducts = currentProducts.filter((product) => product._id.toString() !== productId);
+  currentProducts = currentProducts.filter((product) => product._id.toString() !== productId.toString());
   this.products = currentProducts;
   await this.save();
 };

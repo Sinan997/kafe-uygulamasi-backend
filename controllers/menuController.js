@@ -159,6 +159,25 @@ const getAllProducts = async (req, res) => {
   }
 };
 
+const changeCategoryName = async (req, res) => {
+  const { name, categoryId } = req.body;
+
+  try {
+    if (!name || !categoryId) {
+      return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
+    }
+    const category = await Category.findByIdAndUpdate(categoryId, { name }, { new: true });
+    return res.status(200).json({
+      code: 'CATEGORY_UPDATED',
+      message: 'Category updated successfully.',
+      category,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
+  }
+};
+
 const setProductsIndex = async (req, res) => {
   const { products } = req.body;
   const promises = [];
@@ -185,6 +204,39 @@ const updateProductIndex = (product) => {
   return Product.findByIdAndUpdate(product._id, product);
 };
 
+const deleteProduct = async (req, res) => {
+  const { productId } = req.body;
+
+  try {
+    if (!productId) {
+      return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
+    }
+    const product = await Product.findByIdAndDelete(productId);
+    const category = await Category.findById(product.categoryId);
+    await category.removeFromProducts(productId);
+    return res.status(200).json({
+      code: 'PRODUCT_DELETED',
+      message: 'Product deleted successfully.',
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
+  }
+};
+
+const updateProductAsync = async (req, res) => {
+  const { productId } = req.body;
+  try {
+    await Product.findByIdAndUpdate(productId, { ...req.body });
+    return res
+      .status(200)
+      .json({ code: 'PRODUCT_UPDATED', message: 'Product updated successfully.' });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
+  }
+};
+
 module.exports = {
   addCategory,
   allCategories,
@@ -194,4 +246,7 @@ module.exports = {
   addProduct,
   getAllProducts,
   setProductsIndex,
+  changeCategoryName,
+  deleteProduct,
+  updateProductAsync,
 };
