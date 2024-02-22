@@ -8,6 +8,7 @@ const productSchema = new Schema({
   index: { type: Number, required: true },
   isAvailable: { type: Boolean, required: true },
   categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
+  businessId: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', required: true },
 });
 
 module.exports = mongoose.model('Product', productSchema);

@@ -31,7 +31,7 @@ app.post('/api/generate-qrcode', (req, res) => {
   }
 });
 
-app.listen(8080, () => {
-  console.log('server ayağa kalktı');
+app.listen(process.env.PORT, () => {
+  console.log('server runs at:', process.env.PORT);
   startDB();
 });

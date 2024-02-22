@@ -1,5 +1,7 @@
 const Business = require('../models/Business');
 const User = require('../models/User');
+const Categories = require('../models/Category');
+const Product = require('../models/Product');
 const bcrypt = require('bcryptjs');
 const { roles } = require('../constants/roles');
 
@@ -16,6 +18,13 @@ const addBusiness = async (req, res) => {
       return res
         .status(406)
         .json({ code: 'NAME_EXIST', data: { name }, message: `${name} is already used` });
+    }
+
+    const isEmailExist = await User.findOne({ email });
+    if (isEmailExist) {
+      return res
+        .status(406)
+        .json({ code: 'EMAIL_EXIST', data: { email }, message: `${email} is already used` });
     }
 
     // CREATE BUSINESS ADMIN
@@ -72,7 +81,15 @@ const deleteBusiness = async (req, res) => {
     // DELETE OWNER
     await User.findByIdAndDelete(business.ownerId);
 
-    // TODO: delete busıness's waiters
+    // DELETE WAITERS
+    await User.deleteMany({ businessId: id });
+
+    // DELETE CATEGORIES
+    await Categories.deleteMany({ businessId: id });
+
+    // DELETE PRODUCTS
+    await Product.deleteMany({ businessId: id });
+
     return res
       .status(200)
       .json({ code: 'BUSINESS_DELETED', message: 'Business deleted succesfully.' });
@@ -90,10 +107,22 @@ const updateBusiness = async (req, res) => {
       const hashedPw = await bcrypt.hash(password, 10);
       updateObject.password = hashedPw;
     }
-    // TODO: check is business name exist
-    await Business.findByIdAndUpdate(_id, { name });
+    const isBusinessExist = await Business.findOne({ name });
+    if (isBusinessExist) {
+      return res
+        .status(406)
+        .json({ code: 'NAME_EXIST', data: { name }, message: `${name} is already used` });
+    }
 
-    // TODO: check is email exist
+    const isEmailExist = await User.findOne({ email });
+    console.log(isEmailExist);
+    if (isEmailExist) {
+      return res
+        .status(406)
+        .json({ code: 'EMAIL_EXIST', data: { email }, message: `${email} is already used` });
+    }
+
+    await Business.findByIdAndUpdate(_id, { name });
     await User.findByIdAndUpdate(ownerId, updateObject);
 
     return res

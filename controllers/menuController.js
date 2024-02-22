@@ -122,6 +122,7 @@ const getCategory = async (req, res) => {
 };
 
 const addProduct = async (req, res) => {
+  const businessId = req.user.businessId;
   const { categoryId, name, price, isAvailable } = req.body;
   if (!name || isNaN(price) || !categoryId || isAvailable === undefined) {
     return res.status(406).json({ code: 'MISSING_FIELDS', message: 'Fill required places.' });
@@ -130,7 +131,7 @@ const addProduct = async (req, res) => {
     const category = await Category.findById(categoryId);
     const index = category.products.length;
 
-    const product = await new Product({ name, price, index, isAvailable, categoryId }).save();
+    const product = await new Product({ name, price, index, isAvailable, categoryId, businessId }).save();
     await category.addToProducts(product._id);
 
     return res.status(201).json({

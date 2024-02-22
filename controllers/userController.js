@@ -109,17 +109,16 @@ const updateUser = async (req, res) => {
       username = username.toLowerCase().replace(/\s/g, '');
     }
 
-    // CHECK IS USER EXISTING
     const user = await User.findById(_id);
-    if (!(user.username === username)) {
-      const isUsernameExist = await User.findOne({ username });
-      if (isUsernameExist) {
-        return res.status(406).json({
-          code: 'USERNAME_EXIST',
-          data: { username },
-          message: `${username} is already used`,
-        });
-      }
+
+
+    const isUsernameExist = await User.findOne({ username });
+    if (isUsernameExist) {
+      return res.status(406).json({
+        code: 'USERNAME_EXIST',
+        data: { username },
+        message: `${username} is already used`,
+      });
     }
 
     // CHECK IS EMAIL EXISTING
