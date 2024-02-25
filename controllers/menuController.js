@@ -5,14 +5,8 @@ const Product = require('../models/Product');
 const allCategories = async (req, res) => {
   const businessId = req.user.businessId;
   try {
-    const business = await Business.findById(businessId).populate('categories');
-    if (!business) {
-      return res.status(400).json({
-        code: 'CATEGORY_TABLE',
-        message: 'An error occurred while bringing in the categories.',
-      });
-    }
-    const categories = business.categories;
+    const categories = await Category.find({ businessId }).populate('products');
+
     return res.status(200).json({ categories });
   } catch (error) {
     console.log(error);
