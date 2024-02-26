@@ -42,34 +42,23 @@ const getAllTables = async (req, res) => {
   }
 };
 
-// const deleteBusiness = async (req, res) => {
-//   const { id } = req.body;
-//   try {
-//     // DELETE BUSINESS
-//     const business = await Business.findByIdAndDelete(id);
-//     if (!business) {
-//       return res.status(404).json({ code: 'BUSINESS_NOT_FOUND', message: 'Business not found.' });
-//     }
-//     // DELETE OWNER
-//     await User.findByIdAndDelete(business.ownerId);
+const deleteTable = async (req, res) => {
+  const { id } = req.body;
+  try {
+    // DELETE BUSINESS
+    const table = await Table.findByIdAndDelete(id);
+    if (!table) {
+      return res.status(404).json({ code: 'TABLE_NOT_FOUND', message: 'Table not found.' });
+    }
 
-//     // DELETE WAITERS
-//     await User.deleteMany({ businessId: id });
-
-//     // DELETE CATEGORIES
-//     await Categories.deleteMany({ businessId: id });
-
-//     // DELETE PRODUCTS
-//     await Product.deleteMany({ businessId: id });
-
-//     return res
-//       .status(200)
-//       .json({ code: 'BUSINESS_DELETED', message: 'Business deleted succesfully.' });
-//   } catch (error) {
-//     console.log(error);
-//     return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
-//   }
-// };
+    return res
+      .status(200)
+      .json({ code: 'BUSINESS_DELETED', message: 'Business deleted succesfully.' });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
+  }
+};
 
 // const updateBusiness = async (req, res) => {
 //   const { _id, ownerId, name, email, password } = req.body;
@@ -108,6 +97,6 @@ const getAllTables = async (req, res) => {
 module.exports = {
   addTable,
   getAllTables,
-  // deleteBusiness,
+  deleteTable,
   // updateBusiness,
 };
