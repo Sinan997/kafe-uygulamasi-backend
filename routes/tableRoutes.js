@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {
-  addTable, getAllTables, deleteTable
+  addTable, getAllTables, deleteTable, updateTable, addOrder, getTableOrders, takeOrders
 } = require('../controllers/table-controller');
 const { verifyToken } = require('../middlewares/verifyToken');
 const { isBusiness } = require('../middlewares/isBusinessValidator');
@@ -12,6 +12,11 @@ router.get('/get-tables', verifyToken, isBusiness, getAllTables);
 
 router.delete('/delete-table', verifyToken, isBusiness, deleteTable);
 
-// router.put('/update-business', verifyToken, isBusiness, updateBusiness);
+router.put('/update-table', verifyToken, isBusiness, updateTable);
 
+router.post('/add-order', verifyToken, isBusiness, addOrder);
+
+router.post('/get-table-orders', verifyToken, isBusiness, getTableOrders);
+
+router.post('/take-orders', verifyToken, isBusiness, takeOrders);
 module.exports = router;

@@ -18,7 +18,6 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/table', tableRoutes);
 
 
-
 // qrcode
 app.post('/api/generate-qrcode', (req, res) => {
   const businessUrl = req.body.businessUrl;
