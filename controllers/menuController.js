@@ -125,6 +125,8 @@ const addProduct = async (req, res) => {
     const category = await Category.findById(categoryId);
     const index = category.products.length;
 
+    // TODO: check is name exist
+
     const product = await new Product({ name, price, index, isAvailable, categoryId, businessId }).save();
     await category.addToProducts(product._id);
 
