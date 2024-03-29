@@ -122,7 +122,7 @@ const updateUser = async (req, res) => {
     }
 
     // CHECK IS EMAIL EXISTING
-    if (!user.email === email) {
+    if (user.email !== email) {
       const isEmailExist = await User.findOne({ email });
       if (isEmailExist) {
         return res.status(406).json({

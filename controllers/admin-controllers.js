@@ -102,28 +102,45 @@ const deleteBusiness = async (req, res) => {
 const updateBusiness = async (req, res) => {
   const { _id, ownerId, name, email, password } = req.body;
   try {
-    const updateObject = { email };
+    const business = await Business.findById(_id);
+    const owner = await User.findById(ownerId);
+
+    if (!business || !owner) {
+      return res.status(404).json({ code: 'BUSINESS_NOT_FOUND', message: 'Business not found.' });
+    }
+
+    const ownerUpdateObject = {};
+
     if (password) {
       const hashedPw = await bcrypt.hash(password, 10);
-      updateObject.password = hashedPw;
-    }
-    const isBusinessExist = await Business.findOne({ name });
-    if (isBusinessExist) {
-      return res
-        .status(406)
-        .json({ code: 'NAME_EXIST', data: { name }, message: `${name} is already used` });
+      ownerUpdateObject.password = hashedPw;
     }
 
-    const isEmailExist = await User.findOne({ email });
-    console.log(isEmailExist);
-    if (isEmailExist) {
-      return res
-        .status(406)
-        .json({ code: 'EMAIL_EXIST', data: { email }, message: `${email} is already used` });
+    // CHECK IF NAME IS CHANGED AND IF IT IS USED
+    if (business.name !== name) {
+      const isNameExist = await Business.findOne({ name });
+      if (isNameExist) {
+        return res
+          .status(406)
+          .json({ code: 'NAME_EXIST', data: { name }, message: `${name} is already used` });
+      }
     }
+
+    // CHECK IF EMAIL IS CHANGED AND IF IT IS USED
+    if (owner.email !== email) {
+      const isEmailExist = await User.findOne({ email });
+      ownerUpdateObject.email = email;
+      if (isEmailExist) {
+        return res
+          .status(406)
+          .json({ code: 'EMAIL_EXIST', data: { email }, message: `${email} is already used` });
+      }
+    }
+
+    ownerUpdateObject.username = name.toLowerCase().replace(/\s/g, '') + '.admin';
 
     await Business.findByIdAndUpdate(_id, { name });
-    await User.findByIdAndUpdate(ownerId, updateObject);
+    await User.findByIdAndUpdate(ownerId, ownerUpdateObject);
 
     return res
       .status(200)
