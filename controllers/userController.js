@@ -112,16 +112,19 @@ const updateUser = async (req, res) => {
     const user = await User.findById(_id);
 
 
-    const isUsernameExist = await User.findOne({ username });
-    if (isUsernameExist) {
-      return res.status(406).json({
-        code: 'USERNAME_EXIST',
-        data: { username },
-        message: `${username} is already used`,
-      });
+    // CHECK IS USERNAME CHANGED AND IS USERNAME EXISTING
+    if(user.username !== username){
+      const isUsernameExist = await User.findOne({ username });
+      if (isUsernameExist) {
+        return res.status(406).json({
+          code: 'USERNAME_EXIST',
+          data: { username },
+          message: `${username} is already used`,
+        });
+      }
     }
 
-    // CHECK IS EMAIL EXISTING
+    // CHECK IS EMAIL CHANGED AND IS EMAIL EXISTING
     if (user.email !== email) {
       const isEmailExist = await User.findOne({ email });
       if (isEmailExist) {
