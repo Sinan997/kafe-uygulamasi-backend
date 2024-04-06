@@ -8,6 +8,7 @@ const orderSchema = new Schema({
   businessId: { type: Schema.Types.ObjectId, ref: 'Business' },
   amount: { type: Number, required: true },
   isReady: { type: Boolean, default: false },
+  isDelivered: { type: Boolean, default: false },
 });
 
 module.exports = mongoose.model('Order', orderSchema);

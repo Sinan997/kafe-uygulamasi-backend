@@ -1,5 +1,7 @@
 const Table = require('../models/Table');
 const Order = require('../models/Order');
+const Business = require('../models/Business');
+const { getSocket } = require('../socketController');
 
 const addTable = async (req, res) => {
   const { name } = req.body;
@@ -34,7 +36,7 @@ const addTable = async (req, res) => {
 const getAllTables = async (req, res) => {
   const businessId = req.user.businessId;
   try {
-    const tables = await Table.find({ businessId }, { businessId: 0, __v: 0 })
+    const tables = await Table.find({ businessId }, { businessId: 0, __v: 0 });
 
     return res.status(200).json({ tables });
   } catch (error) {
@@ -63,7 +65,7 @@ const deleteTable = async (req, res) => {
 
 const updateTable = async (req, res) => {
   const { id, name } = req.body;
-  const businessId = req.user.businessId
+  const businessId = req.user.businessId;
   try {
     const isNameExist = await Table.findOne({ name, businessId });
 
@@ -75,9 +77,7 @@ const updateTable = async (req, res) => {
       });
     }
     await Table.findByIdAndUpdate(id, { name });
-    return res
-      .status(200)
-      .json({ code: 'TABLE_UPDATED', message: 'Table updated successfully.' });
+    return res.status(200).json({ code: 'TABLE_UPDATED', message: 'Table updated successfully.' });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
@@ -85,14 +85,14 @@ const updateTable = async (req, res) => {
 };
 
 const addOrder = async (req, res) => {
-  let { orders: newOrders, tableId } = req.body;
+  let { orders, tableId } = req.body;
   const businessId = req.user.businessId;
   try {
     const table = await Table.findOne({ _id: tableId, businessId });
     const currentOrders = table.orders;
 
     // MANIPULATE ORDERS AND SAVE ORDERS
-    newOrders = newOrders.map((order) => {
+    const newOrders = orders.map((order) => {
       return {
         productId: order._id,
         amount: order.amount,
@@ -101,7 +101,9 @@ const addOrder = async (req, res) => {
     const manipulatedArray = [];
 
     newOrders.forEach((order) => {
-      const isExist = currentOrders.find((currentOrder) => currentOrder.productId.toString() == order.productId.toString());
+      const isExist = currentOrders.find(
+        (currentOrder) => currentOrder.productId.toString() == order.productId.toString(),
+      );
 
       if (isExist) {
         isExist.amount += order.amount;
@@ -113,6 +115,17 @@ const addOrder = async (req, res) => {
     table.orders = [...table.orders, ...manipulatedArray];
 
     table.save();
+
+    const orderList = await Order.insertMany(
+      orders.map((order) => ({ productId: order._id, tableId, businessId, amount: order.amount })),
+    );
+
+    // ADD TO THE ORDERS
+    const business = await Business.findById(businessId);
+    await business.addOrder(orderList.map((order) => order._id) || []);
+
+    socket = getSocket();
+    socket.emit(businessId._id, orderList[0]._id);
 
     return res.status(201).json({
       code: 'ORDER_CREATED',
@@ -127,12 +140,14 @@ const addOrder = async (req, res) => {
 const getTableOrders = async (req, res) => {
   const { tableId } = req.body;
   try {
-    const table = await Table.findById(tableId).select('-orders._id').populate({ path: 'orders.productId', select: '-businessId -index -__v' });
-    const orders = table.orders.map((order) => {
+    const table = await Table.findById(tableId)
+      .select('-orders._id')
+      .populate({ path: 'orders.productId', select: '-businessId -index -__v' });
+    const orders = table?.orders.map((order) => {
       return {
         product: order.productId,
-        amount: order.amount
-      }
+        amount: order.amount,
+      };
     });
     return res.status(200).json({ orders });
   } catch (error) {
@@ -141,23 +156,48 @@ const getTableOrders = async (req, res) => {
   }
 };
 
-const takeOrders = async (req,res) => {
+const takeOrders = async (req, res) => {
   const { tableId, orders } = req.body;
   try {
-    const table = await Table.findById(tableId)
+    const table = await Table.findById(tableId);
     const tableOrders = [...table.orders];
-    orders.map(order => {
-      const tableOrder = tableOrders.find(tableOrder => tableOrder.productId.toString() === order._id.toString());
+    orders.map((order) => {
+      const tableOrder = tableOrders.find(
+        (tableOrder) => tableOrder.productId.toString() === order._id.toString(),
+      );
       tableOrder.amount -= order.amount;
     });
-    table.orders = [...tableOrders.filter(order => order.amount > 0)];
+    table.orders = [...tableOrders.filter((order) => order.amount > 0)];
     await table.save();
-    return res.status(200).json({ code: 'ORDERS_TAKEN', message: 'Orders taken successfully.'});
+    return res.status(200).json({ code: 'ORDERS_TAKEN', message: 'Orders taken successfully.' });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
   }
-}
+};
+
+const deleteOrder = async (req, res) => {
+  try {
+    const { orderId, tableId } = req.body;
+    const businessId = req.user.businessId._id;
+    const business = await Business.findById(businessId);
+    await Order.findByIdAndDelete(orderId);
+    await business.removeOrder(orderId);
+    const table = await Table.findById(tableId);
+    const tableOrders = [...table.orders];
+    table.orders = [...tableOrders.filter((order) => order._id === orderId)];
+    await table.save();
+    socket = getSocket();
+    socket.emit(businessId, new Date());
+    return res.status(201).json({
+      code: 'ORDER_DELETED',
+      message: 'Order deleted successfully.',
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
+  }
+};
 
 module.exports = {
   addTable,
@@ -166,5 +206,6 @@ module.exports = {
   updateTable,
   addOrder,
   getTableOrders,
-  takeOrders
+  takeOrders,
+  deleteOrder,
 };

@@ -9,6 +9,7 @@ const businessSchema = new Schema({
   categories: [{ type: Schema.Types.ObjectId, ref: 'Category' }],
   waiters: [{ type: Schema.Types.ObjectId, ref: 'Waiter' }],
   ownerId: { type: Schema.Types.ObjectId, ref: 'User' },
+  orders: [{ type: Schema.Types.ObjectId, ref: 'Order' }],
 });
 
 businessSchema.methods.addToWaiters = async function (userId) {
@@ -34,6 +35,18 @@ businessSchema.methods.removeFromCategories = async function (categoryId) {
     (category) => category._id.toString() !== categoryId.toString(),
   );
   this.categories = currentCategories;
+  await this.save();
+};
+
+businessSchema.methods.addOrder = async function (orderIdList) {
+  this.orders = [...this.orders, ...orderIdList];
+  await this.save();
+};
+
+businessSchema.methods.removeOrder = async function (orderId) {
+  let currentOrders = [...this.orders];
+  currentOrders = currentOrders.filter((order) => order._id.toString() !== orderId.toString());
+  this.orders = currentOrders;
   await this.save();
 };
 
