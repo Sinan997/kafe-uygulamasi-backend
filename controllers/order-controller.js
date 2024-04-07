@@ -40,9 +40,7 @@ const setOrderDelivered = async (req, res) => {
   try {
     const { orderId } = req.params;
     const businessId = req.user.businessId._id;
-    const business = await Business.findById(businessId);
-    await Order.findByIdAndDelete(orderId);
-    await business.removeOrder(orderId);
+    await Order.findByIdAndUpdate(orderId, { isDelivered: true });
     socket = getSocket();
     socket.emit(businessId, new Date());
     return res.status(201).json({

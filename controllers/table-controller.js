@@ -90,7 +90,13 @@ const addOrder = async (req, res) => {
   try {
     // SAVE ORDERS TO ORDER COLLECTION
     const orderList = await Order.insertMany(
-      orders.map((order) => ({ productId: order._id, tableId, businessId, amount: order.amount })),
+      orders.map((order) => ({
+        productId: order._id,
+        tableId,
+        businessId,
+        amount: order.amount,
+        baseAmount: order.amount,
+      })),
     );
 
     // ADD ORDERS TO BUSINESS COLLECTION
@@ -138,28 +144,34 @@ const takeOrders = async (req, res) => {
     const business = await Business.findById(businessId);
     const table = await Table.findById(tableId);
 
-    const deletedOrders = [];
+    const finishedOrders = [];
     const reducedOrders = [];
     orders.forEach((element) => {
       if (element.amount === element.pickedAmount) {
-        deletedOrders.push(element._id);
+        finishedOrders.push({ ...element, amount: 0, isReady: true, isDelivered: true });
       } else {
         reducedOrders.push({ ...element, amount: element.amount - element.pickedAmount });
       }
     });
 
-    await Order.deleteMany({ _id: { $in: deletedOrders } });
-    await business.removeOrders(deletedOrders);
+    // await Order.deleteMany({ _id: { $in: finishedOrders } });
+    // await business.removeOrders(finishedOrders);
 
     const tableOrders = [...table.orders];
     table.orders = [
-      ...tableOrders.filter((order) => !deletedOrders.includes(order._id.toString())),
+      ...tableOrders.filter(
+        (order) => !finishedOrders.map((o) => o._id).includes(order._id.toString()),
+      ),
     ];
 
     const promises = [];
 
     reducedOrders.forEach((order) => {
-      promises.push(Order.findByIdAndUpdate(order._id, { amount: order.amount }));
+      promises.push(Order.findByIdAndUpdate(order._id, order));
+    }); 
+
+    finishedOrders.forEach((order) => {
+      promises.push(Order.findByIdAndUpdate(order._id, order));
     });
 
     await Promise.all(promises);
