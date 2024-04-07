@@ -43,9 +43,9 @@ businessSchema.methods.addOrder = async function (orderIdList) {
   await this.save();
 };
 
-businessSchema.methods.removeOrder = async function (orderId) {
+businessSchema.methods.removeOrders = async function (orderIds) {
   let currentOrders = [...this.orders];
-  currentOrders = currentOrders.filter((order) => order._id.toString() !== orderId.toString());
+  currentOrders = currentOrders.filter((order) => !orderIds.includes(order._id.toString()));
   this.orders = currentOrders;
   await this.save();
 };

@@ -88,41 +88,19 @@ const addOrder = async (req, res) => {
   let { orders, tableId } = req.body;
   const businessId = req.user.businessId;
   try {
-    const table = await Table.findOne({ _id: tableId, businessId });
-    const currentOrders = table.orders;
-
-    // MANIPULATE ORDERS AND SAVE ORDERS
-    const newOrders = orders.map((order) => {
-      return {
-        productId: order._id,
-        amount: order.amount,
-      };
-    });
-    const manipulatedArray = [];
-
-    newOrders.forEach((order) => {
-      const isExist = currentOrders.find(
-        (currentOrder) => currentOrder.productId.toString() == order.productId.toString(),
-      );
-
-      if (isExist) {
-        isExist.amount += order.amount;
-        return;
-      }
-      manipulatedArray.push(order);
-    });
-
-    table.orders = [...table.orders, ...manipulatedArray];
-
-    table.save();
-
+    // SAVE ORDERS TO ORDER COLLECTION
     const orderList = await Order.insertMany(
       orders.map((order) => ({ productId: order._id, tableId, businessId, amount: order.amount })),
     );
 
-    // ADD TO THE ORDERS
+    // ADD ORDERS TO BUSINESS COLLECTION
     const business = await Business.findById(businessId);
     await business.addOrder(orderList.map((order) => order._id) || []);
+
+    // ADD ORDERS TO TABLE COLLECTION
+    const table = await Table.findOne({ _id: tableId });
+    table.orders = [...table.orders, ...(orderList.map((order) => order._id) || [])];
+    table.save();
 
     socket = getSocket();
     socket.emit(businessId._id, orderList[0]._id);
@@ -140,15 +118,12 @@ const addOrder = async (req, res) => {
 const getTableOrders = async (req, res) => {
   const { tableId } = req.body;
   try {
-    const table = await Table.findById(tableId)
-      .select('-orders._id')
-      .populate({ path: 'orders.productId', select: '-businessId -index -__v' });
-    const orders = table?.orders.map((order) => {
-      return {
-        product: order.productId,
-        amount: order.amount,
-      };
+    const table = await Table.findById(tableId).populate({
+      path: 'orders',
+      populate: { path: 'productId' },
     });
+
+    const orders = table.orders || [];
     return res.status(200).json({ orders });
   } catch (error) {
     console.log(error);
@@ -159,17 +134,50 @@ const getTableOrders = async (req, res) => {
 const takeOrders = async (req, res) => {
   const { tableId, orders } = req.body;
   try {
+    const businessId = req.user.businessId._id;
+    const business = await Business.findById(businessId);
     const table = await Table.findById(tableId);
-    const tableOrders = [...table.orders];
-    orders.map((order) => {
-      const tableOrder = tableOrders.find(
-        (tableOrder) => tableOrder.productId.toString() === order._id.toString(),
-      );
-      tableOrder.amount -= order.amount;
+
+    const deletedOrders = [];
+    const reducedOrders = [];
+    orders.forEach((element) => {
+      if (element.amount === element.pickedAmount) {
+        deletedOrders.push(element._id);
+      } else {
+        reducedOrders.push({ ...element, amount: element.amount - element.pickedAmount });
+      }
     });
-    table.orders = [...tableOrders.filter((order) => order.amount > 0)];
+
+    await Order.deleteMany({ _id: { $in: deletedOrders } });
+    await business.removeOrders(deletedOrders);
+
+    const tableOrders = [...table.orders];
+    table.orders = [
+      ...tableOrders.filter((order) => !deletedOrders.includes(order._id.toString())),
+    ];
+
+    const promises = [];
+
+    reducedOrders.forEach((order) => {
+      promises.push(Order.findByIdAndUpdate(order._id, { amount: order.amount }));
+    });
+
+    await Promise.all(promises);
     await table.save();
-    return res.status(200).json({ code: 'ORDERS_TAKEN', message: 'Orders taken successfully.' });
+
+    socket = getSocket();
+    socket.emit(businessId, new Date());
+
+    const updatedOrders =
+      (
+        await Table.findById(tableId).populate({
+          path: 'orders',
+          populate: { path: 'productId' },
+        })
+      ).orders || [];
+    return res
+      .status(200)
+      .json({ code: 'ORDERS_TAKEN', message: 'Orders taken successfully.', orders: updatedOrders });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
@@ -178,14 +186,14 @@ const takeOrders = async (req, res) => {
 
 const deleteOrder = async (req, res) => {
   try {
-    const { orderId, tableId } = req.body;
+    const { orderIds, tableId } = req.body;
     const businessId = req.user.businessId._id;
     const business = await Business.findById(businessId);
-    await Order.findByIdAndDelete(orderId);
-    await business.removeOrder(orderId);
+    await Order.deleteMany({ _id: { $in: orderIds } });
+    await business.removeOrders(orderIds);
     const table = await Table.findById(tableId);
     const tableOrders = [...table.orders];
-    table.orders = [...tableOrders.filter((order) => order._id === orderId)];
+    table.orders = [...tableOrders.filter((order) => !orderIds.includes(order._id.toString()))];
     await table.save();
     socket = getSocket();
     socket.emit(businessId, new Date());
