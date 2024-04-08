@@ -12,6 +12,7 @@ const menuRoutes = require('./routes/menuRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const tableRoutes = require('./routes/tableRoutes');
 const orderRoutes = require('./routes/order-routes');
+const businessRoutes = require('./routes/business-routes');
 require('dotenv').config();
 
 app.get('/health-status', (req, res) => {
@@ -25,6 +26,7 @@ app.use('/api/menu', menuRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/table', tableRoutes);
 app.use('/api/order', orderRoutes);
+app.use('/api/business', businessRoutes);
 
 app.post('/api/generate-qrcode', (req, res) => {
   const businessUrl = req.body.businessUrl;
