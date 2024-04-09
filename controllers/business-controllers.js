@@ -20,7 +20,10 @@ const getAllOrders = async (req, res) => {
 const getAllCategories = async (req, res) => {
   try {
     const businessId = req.user.businessId;
-    const business = await Business.findById(businessId).populate({ path: 'categories', populate: { path: 'products' }});
+    const business = await Business.findById(businessId).populate({
+      path: 'categories',
+      populate: { path: 'products' },
+    });
     const categories = business.categories;
     return res
       .status(200)

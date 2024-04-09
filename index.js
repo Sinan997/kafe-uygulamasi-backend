@@ -5,12 +5,14 @@ const { setupSocket } = require('./socketController');
 setupSocket(httpServer);
 
 const cors = require('cors');
-const { startDB } = require('./utils/startDb');
-const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
-const menuRoutes = require('./routes/menuRoutes');
-const adminRoutes = require('./routes/adminRoutes');
-const tableRoutes = require('./routes/tableRoutes');
+const { startDB } = require('./utils/start-db');
+
+
+const authRoutes = require('./routes/auth-routes');
+const adminRoutes = require('./routes/admin-routes');
+const userRoutes = require('./routes/user-routes');
+const menuRoutes = require('./routes/menu-routes');
+const tableRoutes = require('./routes/table-routes');
 const orderRoutes = require('./routes/order-routes');
 const businessRoutes = require('./routes/business-routes');
 require('dotenv').config();

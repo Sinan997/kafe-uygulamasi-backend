@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { getAllOrders, getAllCategories } = require('../controllers/business-controller');
-const { verifyToken } = require('../middlewares/verifyToken');
+const { getAllOrders, getAllCategories } = require('../controllers/business-controllers');
+const { verifyToken } = require('../middlewares/verify-token');
 
 router.get('/get-all-orders', verifyToken, getAllOrders);
 
