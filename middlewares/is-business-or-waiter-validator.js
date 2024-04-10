@@ -1,8 +1,8 @@
 const { roles } = require('../constants/roles');
 
-const isAdminOrBusiness = (req, res, next) => {
+const isWaiterOrBusiness = (req, res, next) => {
   try {
-    if (req.role === roles.Admin || req.role === roles.Business) {
+    if (req.role === roles.Business || req.role === roles.Waiter) {
       next();
     } else {
       return res.status(403).json({ message: 'Yetkili değil', success: false });
@@ -13,5 +13,5 @@ const isAdminOrBusiness = (req, res, next) => {
 };
 
 module.exports = {
-  isAdminOrBusiness,
+  isWaiterOrBusiness,
 };

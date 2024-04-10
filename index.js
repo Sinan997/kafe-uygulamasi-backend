@@ -7,14 +7,15 @@ setupSocket(httpServer);
 const cors = require('cors');
 const { startDB } = require('./utils/start-db');
 
+const { isBusiness } = require('./middlewares/is-business-validator');
 
 const authRoutes = require('./routes/auth-routes');
 const adminRoutes = require('./routes/admin-routes');
+const businessRoutes = require('./routes/business-routes');
 const userRoutes = require('./routes/user-routes');
 const menuRoutes = require('./routes/menu-routes');
 const tableRoutes = require('./routes/table-routes');
 const orderRoutes = require('./routes/order-routes');
-const businessRoutes = require('./routes/business-routes');
 require('dotenv').config();
 
 app.get('/health-status', (req, res) => {
@@ -23,14 +24,14 @@ app.get('/health-status', (req, res) => {
 app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/business', businessRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/menu', menuRoutes);
-app.use('/api/admin', adminRoutes);
 app.use('/api/table', tableRoutes);
 app.use('/api/order', orderRoutes);
-app.use('/api/business', businessRoutes);
 
-app.post('/api/generate-qrcode', (req, res) => {
+app.post('/api/generate-qrcode', isBusiness, (req, res) => {
   const businessUrl = req.body.businessUrl;
   const qrcode = require('qrcode');
   try {
