@@ -13,6 +13,7 @@ const verifyToken = (req, res, next) => {
       req.role = decodedToken.role;
       next();
     } catch (error) {
+      console.log(error);
       return res.status(401).json(error);
     }
   }

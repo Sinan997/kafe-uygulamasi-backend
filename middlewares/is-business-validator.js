@@ -8,6 +8,7 @@ const isBusiness = (req, res, next) => {
       return res.status(403).json({ message: 'Unauthorized.', success: false });
     }
   } catch (error) {
+    console.log(error);
     return res.status(401).json({ message: 'Token is not valid.', success: false });
   }
 };
