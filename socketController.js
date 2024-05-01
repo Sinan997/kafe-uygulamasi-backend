@@ -8,10 +8,10 @@ function setupSocket(server) {
   });
 
   io.on('connection', (socket) => {
-    console.log('Yeni bir kullanıcı bağlandı.');
+    console.log('new socket:', socket.id);
 
     socket.on('disconnect', () => {
-      console.log('Kullanıcı ayrıldı.');
+      console.log('socket disconnected.', socket.id);
     });
   });
 }

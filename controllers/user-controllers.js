@@ -61,6 +61,7 @@ const addUser = async (req, res) => {
       password: hashedPw,
       role: roles.Waiter,
       businessId,
+      notifications: [],
     }).save();
 
     // ADD TO BUSINESS WAITERS LIST
@@ -87,9 +88,7 @@ const deleteUser = async (req, res) => {
     const business = await Business.findById(businessId);
     await business.removeFromWaiters(user._id);
 
-    return res
-      .status(200)
-      .json({ code: 'USER_DELETED', message: 'User deleted succesfully.' });
+    return res.status(200).json({ code: 'USER_DELETED', message: 'User deleted succesfully.' });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
@@ -111,9 +110,8 @@ const updateUser = async (req, res) => {
 
     const user = await User.findById(_id);
 
-
     // CHECK IS USERNAME CHANGED AND IS USERNAME EXISTING
-    if(user.username !== username){
+    if (user.username !== username) {
       const isUsernameExist = await User.findOne({ username });
       if (isUsernameExist) {
         return res.status(406).json({

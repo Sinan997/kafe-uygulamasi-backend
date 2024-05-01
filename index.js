@@ -37,7 +37,6 @@ app.use('/api/qrmenu', qrMenuRoutes);
 app.post('/api/generate-qrcode', verifyToken, isBusiness, (req, res) => {
   const businessUrl = req.body.businessUrl;
   const qrcode = require('qrcode');
-  console.log(businessUrl);
   try {
     qrcode.toString(businessUrl, { type: 'svg' }, function (err, svg) {
       res.status(201).json({ svg: svg, message: 'Qrcode oluşturuldu', success: true });

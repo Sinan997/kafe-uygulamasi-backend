@@ -1,6 +1,7 @@
 const Table = require('../models/Table');
 const Order = require('../models/Order');
 const Business = require('../models/Business');
+const Product = require('../models/Product');
 const { getSocket } = require('../socketController');
 
 const addTable = async (req, res) => {
@@ -109,7 +110,24 @@ const addOrder = async (req, res) => {
     table.save();
 
     socket = getSocket();
-    socket.emit(businessId._id, orderList[0]._id);
+
+    orderList.forEach(async (order) => {
+      const product = await Product.findById(order.productId);
+      const table = await Table.findById(order.tableId);
+
+      const orderObj = {
+        _id: order._id,
+        baseAmount: order.baseAmount,
+        amount: order.amount,
+        isReady: false,
+        isDelivered: false,
+        productId: { name: product.name },
+        tableId: { name: table.name },
+        businessId: order.businessId,
+      };
+
+      socket.emit(businessId._id + 'neworder', orderObj);
+    });
 
     return res.status(201).json({
       code: 'ORDER_CREATED',
@@ -154,9 +172,6 @@ const takeOrders = async (req, res) => {
       }
     });
 
-    // await Order.deleteMany({ _id: { $in: finishedOrders } });
-    // await business.removeOrders(finishedOrders);
-
     const tableOrders = [...table.orders];
     table.orders = [
       ...tableOrders.filter(
@@ -168,7 +183,7 @@ const takeOrders = async (req, res) => {
 
     reducedOrders.forEach((order) => {
       promises.push(Order.findByIdAndUpdate(order._id, order));
-    }); 
+    });
 
     finishedOrders.forEach((order) => {
       promises.push(Order.findByIdAndUpdate(order._id, order));

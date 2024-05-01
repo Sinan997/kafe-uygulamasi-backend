@@ -8,6 +8,7 @@ const userSchema = new Schema({
   password: { type: String, required: true },
   role: { type: String, required: true },
   businessId: { type: Schema.Types.ObjectId, ref: 'Business' },
+  notifications: [{ type: Schema.Types.ObjectId, ref: 'Notification' }],
 });
 
 module.exports = mongoose.model('User', userSchema);

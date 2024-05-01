@@ -11,7 +11,9 @@ const loginController = async (req, res) => {
       return res.status(406).json({ code: 'MISSING_FIELDS', message: 'Fill required places.' });
     }
 
-    const user = await User.findOne({ username }).populate('businessId');
+    const user = await User.findOne({ username })
+      .populate({ path: 'businessId', select: '-orders' })
+      .populate('notifications');
 
     if (!user) {
       return res.status(400).json({
@@ -92,6 +94,7 @@ const refreshTokenController = async (req, res) => {
       role: decodedToken.role,
       businessId: decodedToken.businessId,
       businessName: decodedToken.businessName,
+      notifications: decodedToken.notifications,
     };
 
     const newAccessToken = generateToken(user, process.env.JWT_SECRET_KEY, '1h');
@@ -114,6 +117,7 @@ const generateToken = (user, secretKey, expiresIn) => {
     role: user.role,
     businessId: user.businessId,
     businessName: user.businessId?.name,
+    notifications: user.notifications,
   };
   return jwt.sign(options, secretKey, { expiresIn });
 };

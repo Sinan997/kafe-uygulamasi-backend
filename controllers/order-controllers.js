@@ -1,5 +1,8 @@
 const Business = require('../models/Business');
 const Order = require('../models/Order');
+const User = require('../models/User');
+const { roles } = require('../constants/roles');
+const Notification = require('../models/Notification');
 const { getSocket } = require('../socketController');
 
 const getAllOrders = async (req, res) => {
@@ -21,11 +24,30 @@ const setOrderReady = async (req, res) => {
   try {
     const { orderId } = req.params;
     const businessId = req.user.businessId._id;
-    const order = await Order.findById(orderId);
+    const order = await Order.findById(orderId).populate('productId tableId');
+
     order.isReady = true;
     await order.save();
+
     socket = getSocket();
-    socket.emit(businessId, new Date());
+
+    const notification = new Notification({
+      tableName: order.tableId.name,
+      productName: order.productId.name,
+      businessId,
+      isRead: false,
+      quantity: order.baseAmount,
+    });
+
+    await notification.save();
+
+    await User.updateMany(
+      { businessId, role: roles.Waiter },
+      { $push: { notifications: notification } },
+    );
+    socket.emit(businessId + 'notification', notification);
+    socket.emit(businessId + 'setorderready', orderId);
+
     return res.status(201).json({
       code: 'ORDER_SET_READY',
       message: 'Order setted as ready.',
@@ -42,7 +64,7 @@ const setOrderDelivered = async (req, res) => {
     const businessId = req.user.businessId._id;
     await Order.findByIdAndUpdate(orderId, { isDelivered: true });
     socket = getSocket();
-    socket.emit(businessId, new Date());
+    socket.emit(businessId + 'orderdelivered', orderId);
     return res.status(201).json({
       code: 'ORDER_SET_DELIVERED',
       message: 'Order delivered successfully.',
