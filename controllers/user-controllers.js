@@ -105,7 +105,11 @@ const updateUser = async (req, res) => {
     if (!username.includes('.' + businessName)) {
       username = username.toLowerCase().replace(/\s/g, '') + '.' + businessName;
     } else {
-      username = username.toLowerCase().replace(/\s/g, '');
+      username = username
+        .toLowerCase()
+        .replace(/\s/g, '')
+        .split('.' + businessName)[0];
+      username = username.toLowerCase().replace(/\s/g, '') + '.' + businessName;
     }
 
     const user = await User.findById(_id);
