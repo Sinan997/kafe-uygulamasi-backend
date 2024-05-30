@@ -2,6 +2,8 @@ const Business = require('../models/Business');
 const User = require('../models/User');
 const Categories = require('../models/Category');
 const Product = require('../models/Product');
+const Table = require('../models/Table');
+const Order = require('../models/Order');
 const bcrypt = require('bcryptjs');
 const { roles } = require('../constants/roles');
 
@@ -89,6 +91,12 @@ const deleteBusiness = async (req, res) => {
 
     // DELETE PRODUCTS
     await Product.deleteMany({ businessId: id });
+
+    // DELETE TABLES
+    await Table.deleteMany({ businessId: id });
+
+    // DELETE ORDERS
+    await Order.deleteMany({ businessId: id });
 
     return res
       .status(200)
