@@ -5,7 +5,6 @@ const {
   allCategories,
   deleteCategory,
   setCategoriesIndex,
-  getCategory,
   addProduct,
   getAllProducts,
   setProductsIndex,
@@ -26,8 +25,6 @@ router.post('/add-category', verifyToken, isBusiness, addCategory);
 router.delete('/delete-category', verifyToken, isBusiness, deleteCategory);
 
 router.post('/set-categories-index', verifyToken, isBusiness, setCategoriesIndex);
-
-router.get('/get-category/:categoryId', verifyToken, isBusiness, getCategory);
 
 router.get('/all-products/:categoryId', verifyToken, isBusiness, getAllProducts);
 

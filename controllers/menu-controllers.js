@@ -5,7 +5,7 @@ const Product = require('../models/Product');
 const allCategories = async (req, res) => {
   const businessId = req.user.businessId;
   try {
-    const categories = await Category.find({ businessId }).populate('products');
+    const categories = await Category.find({ businessId });
 
     return res.status(200).json({ categories });
   } catch (error) {
@@ -100,21 +100,6 @@ const updateCategory = (category) => {
   return Category.findByIdAndUpdate(category._id, category);
 };
 
-const getCategory = async (req, res) => {
-  const { categoryId } = req.params;
-
-  try {
-    if (!categoryId) {
-      return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
-    }
-    const category = await Category.findById(categoryId);
-    return res.status(200).json({ category, message: 'Category found successfully.' });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
-  }
-};
-
 const addProduct = async (req, res) => {
   const businessId = req.user.businessId;
   const { categoryId, name, price, isAvailable } = req.body;
@@ -122,12 +107,28 @@ const addProduct = async (req, res) => {
     return res.status(406).json({ code: 'MISSING_FIELDS', message: 'Fill required places.' });
   }
   try {
-    const category = await Category.findById(categoryId);
+    const category = await Category.findById(categoryId).populate('products');
     const index = category.products.length;
 
-    // TODO: check is name exist
+    const isNameExist = category.products.find(
+      (product) => product.name.toLowerCase() === name.toLowerCase(),
+    );
+    if (isNameExist) {
+      return res.status(406).json({
+        code: 'PRODUCT_EXIST',
+        data: { name },
+        message: `${name} is already used`,
+      });
+    }
 
-    const product = await new Product({ name, price, index, isAvailable, categoryId, businessId }).save();
+    const product = await new Product({
+      name,
+      price,
+      index,
+      isAvailable,
+      categoryId,
+      businessId,
+    }).save();
     await category.addToProducts(product._id);
 
     return res.status(201).json({
@@ -163,11 +164,10 @@ const changeCategoryName = async (req, res) => {
     if (!name || !categoryId) {
       return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
     }
-    const category = await Category.findByIdAndUpdate(categoryId, { name }, { new: true });
+    await Category.findByIdAndUpdate(categoryId, { name });
     return res.status(200).json({
       code: 'CATEGORY_UPDATED',
       message: 'Category updated successfully.',
-      category,
     });
   } catch (error) {
     console.log(error);
@@ -222,8 +222,21 @@ const deleteProduct = async (req, res) => {
 };
 
 const updateProductAsync = async (req, res) => {
-  const { productId } = req.body;
+  const { productId, categoryId, name } = req.body;
   try {
+    const category = await Category.findById(categoryId).populate('products');
+    const isNameExist = category.products.find(
+      (product) => product.name.toLowerCase() === name.toLowerCase(),
+    );
+
+    if (isNameExist) {
+      return res.status(406).json({
+        code: 'PRODUCT_EXIST',
+        data: { name },
+        message: `${name} is already used`,
+      });
+    }
+
     await Product.findByIdAndUpdate(productId, { ...req.body });
     return res
       .status(200)
@@ -239,7 +252,6 @@ module.exports = {
   allCategories,
   deleteCategory,
   setCategoriesIndex,
-  getCategory,
   addProduct,
   getAllProducts,
   setProductsIndex,
