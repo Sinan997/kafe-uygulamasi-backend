@@ -14,6 +14,18 @@ const allCategories = async (req, res) => {
   }
 };
 
+const allCategoriesWithProducts = async (req, res) => {
+  const businessId = req.user.businessId;
+  try {
+    const categories = await Category.find({ businessId }).populate('products');
+
+    return res.status(200).json({ categories });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
+  }
+};
+
 const addCategory = async (req, res) => {
   const { name } = req.body;
   const businessId = req.user.businessId;
@@ -250,6 +262,7 @@ const updateProductAsync = async (req, res) => {
 module.exports = {
   addCategory,
   allCategories,
+  allCategoriesWithProducts,
   deleteCategory,
   setCategoriesIndex,
   addProduct,

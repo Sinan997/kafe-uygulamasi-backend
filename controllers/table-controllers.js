@@ -57,7 +57,7 @@ const deleteTable = async (req, res) => {
 
     return res
       .status(200)
-      .json({ code: 'BUSINESS_DELETED', message: 'Business deleted succesfully.' });
+      .json({ code: 'TABLE_DELETED', message: 'Table deleted succesfully.' });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });

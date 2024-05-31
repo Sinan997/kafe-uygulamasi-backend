@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   addCategory,
   allCategories,
+  allCategoriesWithProducts,
   deleteCategory,
   setCategoriesIndex,
   addProduct,
@@ -19,6 +20,8 @@ const { verifyToken } = require('../middlewares/verify-token');
 // TODO: add isOwner middleware
 
 router.get('/all-categories', verifyToken, isWaiterOrBusiness, allCategories);
+
+router.get('/all-categories-with-products', verifyToken, isWaiterOrBusiness, allCategoriesWithProducts);
 
 router.post('/add-category', verifyToken, isBusiness, addCategory);
 
