@@ -55,9 +55,7 @@ const deleteTable = async (req, res) => {
       return res.status(404).json({ code: 'TABLE_NOT_FOUND', message: 'Table not found.' });
     }
 
-    return res
-      .status(200)
-      .json({ code: 'TABLE_DELETED', message: 'Table deleted succesfully.' });
+    return res.status(200).json({ code: 'TABLE_DELETED', message: 'Table deleted succesfully.' });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ code: 'SERVER_ERROR', message: 'Server failed.' });
@@ -159,7 +157,6 @@ const takeOrders = async (req, res) => {
   const { tableId, orders } = req.body;
   try {
     const businessId = req.user.businessId._id;
-    const business = await Business.findById(businessId);
     const table = await Table.findById(tableId);
 
     const finishedOrders = [];

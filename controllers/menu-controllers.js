@@ -234,21 +234,8 @@ const deleteProduct = async (req, res) => {
 };
 
 const updateProductAsync = async (req, res) => {
-  const { productId, categoryId, name } = req.body;
+  const { productId } = req.body;
   try {
-    const category = await Category.findById(categoryId).populate('products');
-    const isNameExist = category.products.find(
-      (product) => product.name.toLowerCase() === name.toLowerCase(),
-    );
-
-    if (isNameExist) {
-      return res.status(406).json({
-        code: 'PRODUCT_EXIST',
-        data: { name },
-        message: `${name} is already used`,
-      });
-    }
-
     await Product.findByIdAndUpdate(productId, { ...req.body });
     return res
       .status(200)
