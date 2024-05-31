@@ -11,3 +11,8 @@ To run this project MongoDB should be installed in your computer. If it's not in
   - It will create an initial admin user.
     - `username: admin`
     - `password: 123`
+
+### Tech
+- Node.js
+- Socket.IO
+- MongoDB
